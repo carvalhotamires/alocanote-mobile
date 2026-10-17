@@ -1,53 +1,50 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  Alert, 
-  StyleSheet, 
-  Image, 
-  TouchableOpacity, 
-  ActivityIndicator 
+import {
+  View,
+  Text,
+  TextInput,
+  Alert,
+  StyleSheet,
+  Image,
+  Pressable,
 } from 'react-native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import { api } from '../services/api';
-import { Pressable } from 'react-native';
+import { useAuth } from '../contexts/AuthContext';
+import { getApiErrorMessage } from '../services/api';
+import { AuthStackParamList } from '../types/navigation';
+import { PrimaryButton } from '../components/PrimaryButton';
+
+type LoginNavProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
 
 export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
-  const navigation = useNavigation<any>();
 
- 
+  const { signIn } = useAuth();
+  const navigation = useNavigation<LoginNavProp>();
+
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Campos obrigatórios', 'Por favor, preencha o email e a senha.');
+    if (!email.trim() || !password) {
+      Alert.alert('Campos obrigatórios', 'Por favor, preencha o e-mail e a senha.');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const response = await api.post('/auth/login', { 
-        email: email, 
-        password: password 
+      await signIn({
+        email: email.trim(),
+        password,
       });
-
-      const { token } = response.data;
-      
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      Alert.alert('Sucesso', 'Login efetuado com sucesso!');
-      
-      // navigation.navigate('Home');
-
+      // Com AuthContext gerenciando o token, a troca para as rotas autenticadas ocorre automaticamente!
     } catch (error) {
-      console.error(error);
-      Alert.alert(
-        'Erro na Autenticação', 
-        'Credenciais inválidas ou não foi possível contactar o servidor.'
+      const mensagem = getApiErrorMessage(
+        error,
+        'Credenciais inválidas ou não foi possível conectar ao servidor.'
       );
+      Alert.alert('Erro na Autenticação', mensagem);
     } finally {
       setIsLoading(false);
     }
@@ -55,19 +52,18 @@ export function Login() {
 
   return (
     <View style={styles.container}>
-    
-      <Image 
-        source={require('../../assets/logo.png')} 
-        style={styles.logo} 
-        resizeMode="contain" 
+      <Image
+        source={require('../../assets/logo.png')}
+        style={styles.logo}
+        resizeMode="contain"
       />
 
-     
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Email ou Usuário</Text>
-        <TextInput 
+        <Text style={styles.label}>E-mail</Text>
+        <TextInput
           style={styles.input}
-          placeholder="Seu email ou usuário"
+          placeholder="Seu e-mail cadastrado"
+          placeholderTextColor="#7E758C"
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
@@ -75,37 +71,33 @@ export function Login() {
         />
 
         <Text style={styles.label}>Senha</Text>
-        <TextInput 
+        <TextInput
           style={styles.input}
-          placeholder="Senha"
+          placeholder="Sua senha de acesso"
+          placeholderTextColor="#7E758C"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
         />
       </View>
 
-      
-      <TouchableOpacity 
-        style={styles.button} 
+      <PrimaryButton
+        title="Entrar"
         onPress={handleLogin}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <ActivityIndicator color="#FFF" />
-        ) : (
-          <Text style={styles.buttonText}>Entrar</Text>
-        )}
-      </TouchableOpacity>
+        isLoading={isLoading}
+      />
 
-      
-      <Pressable 
+      <Pressable
         onPress={() => navigation.navigate('Cadastro')}
         style={({ pressed }) => [
-          pressed && { opacity: 0.6 }
+          styles.registerPressable,
+          pressed && styles.registerPressed,
         ]}
->
-        <Text style={styles.registerText}>Não tem conta? Cadastre-se</Text>
-</Pressable>
+      >
+        <Text style={styles.registerText}>
+          Não tem conta? <Text style={styles.registerLink}>Cadastre-se</Text>
+        </Text>
+      </Pressable>
     </View>
   );
 }
@@ -119,36 +111,34 @@ const styles = StyleSheet.create({
   },
   logo: {
     width: '100%',
-    height: 150,
-    marginBottom: 40,
+    height: 140,
+    marginBottom: 32,
   },
   inputContainer: {
-    marginBottom: 24,
+    marginBottom: 16,
   },
   label: {
     fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 8,
-    color: '#000',
+    color: '#1F2937',
   },
   input: {
-    backgroundColor: '#D1C4E9', 
+    backgroundColor: '#E9D5FF',
     borderRadius: 8,
-    padding: 16,
+    padding: 14,
     marginBottom: 16,
-    fontSize: 16,
+    fontSize: 15,
+    color: '#1F2937',
+    fontWeight: '500',
   },
-  button: {
-    backgroundColor: '#6A1B9A', 
-    padding: 16,
-    borderRadius: 8,
+  registerPressable: {
+    marginTop: 20,
     alignItems: 'center',
-    marginBottom: 24,
+    padding: 8,
   },
-  buttonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+  registerPressed: {
+    opacity: 0.6,
   },
   registerText: {
     textAlign: 'center',
@@ -156,7 +146,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   registerLink: {
-    color: '#6A1B9A',
+    color: '#4B0082',
     fontWeight: 'bold',
-  }
+  },
 });

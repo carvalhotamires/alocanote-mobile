@@ -3,7 +3,7 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
+  Pressable,
   SafeAreaView,
   ActivityIndicator,
   Alert,
@@ -11,15 +11,21 @@ import {
   Platform,
   Image,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { api } from '../services/api';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { authService } from '../services/authService';
+import { getApiErrorMessage } from '../services/api';
+import { AuthStackParamList } from '../types/navigation';
+import { PrimaryButton } from '../components/PrimaryButton';
 import { styles } from './TelaVerificacaoToken.styles';
 
-export function TelaVerificacaoToken() {
-  const navigation = useNavigation<any>();
-  const route = useRoute<any>();
+type VerificacaoTokenNavProp = NativeStackNavigationProp<AuthStackParamList, 'VerificacaoToken'>;
+type VerificacaoTokenRouteProp = RouteProp<AuthStackParamList, 'VerificacaoToken'>;
 
-  // Recebe o telefone vindo do Cadastro
+export function TelaVerificacaoToken() {
+  const navigation = useNavigation<VerificacaoTokenNavProp>();
+  const route = useRoute<VerificacaoTokenRouteProp>();
+
   const telefone = route.params?.telefone || '';
 
   const [codigo, setCodigo] = useState<string[]>(['', '', '', '', '', '']);
@@ -69,23 +75,22 @@ export function TelaVerificacaoToken() {
     setCarregando(true);
 
     try {
-      // POST para o endpoint implementado no AuthController
-      const resposta = await api.post('/auth/verify-sms', {
-  phone: telefone,
-  code: tokenCompleto,
-});
+      await authService.verifySms({
+        phone: telefone,
+        code: tokenCompleto,
+      });
 
-      if (resposta.status === 200) {
-        Alert.alert('Sucesso', 'Token validado com sucesso!', [
-          {
-            text: 'Ir para o Login',
-            onPress: () => navigation.navigate('Login'),
-          },
-        ]);
-      }
+      Alert.alert('Sucesso', 'Token validado com sucesso!', [
+        {
+          text: 'Ir para o Login',
+          onPress: () => navigation.navigate('Login'),
+        },
+      ]);
     } catch (erro: any) {
-      const mensagem =
-        erro?.response?.data?.message || 'Código incorreto ou expirado. Tente novamente.';
+      const mensagem = getApiErrorMessage(
+        erro,
+        'Código incorreto ou expirado. Tente novamente.'
+      );
       Alert.alert('Falha na Validação', mensagem);
     } finally {
       setCarregando(false);
@@ -95,12 +100,13 @@ export function TelaVerificacaoToken() {
   const handleReenviarCodigo = async () => {
     setReenviando(true);
     try {
-      await api.post('/auth/send-sms', { phone: telefone });
-      
+      await authService.sendSms({ phone: telefone });
       Alert.alert('Enviado', 'Um novo código foi enviado por SMS.');
     } catch (erro: any) {
-      const mensagem =
-        erro?.response?.data?.message || 'Não foi possível reenviar o SMS no momento.';
+      const mensagem = getApiErrorMessage(
+        erro,
+        'Não foi possível reenviar o SMS no momento.'
+      );
       Alert.alert('Erro ao Reenviar', mensagem);
     } finally {
       setReenviando(false);
@@ -114,11 +120,11 @@ export function TelaVerificacaoToken() {
         style={styles.innerContainer}
       >
         <View style={styles.logoContainer}>
-         <Image
-  source={require('../../assets/logo.png')}
-  style={styles.logo}
-  resizeMode="contain"
-/>
+          <Image
+            source={require('../../assets/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
         </View>
 
         <Text style={styles.titulo}>Verificação{'\n'}de Token</Text>
@@ -156,9 +162,9 @@ export function TelaVerificacaoToken() {
           ))}
         </View>
 
-        <TouchableOpacity
+        <Pressable
           onPress={handleReenviarCodigo}
-          style={styles.botaoReenviar}
+          style={({ pressed }) => [styles.botaoReenviar, pressed && styles.botaoReenviarPressed]}
           disabled={reenviando}
         >
           {reenviando ? (
@@ -166,19 +172,14 @@ export function TelaVerificacaoToken() {
           ) : (
             <Text style={styles.textoReenviar}>Reenviar Código</Text>
           )}
-        </TouchableOpacity>
+        </Pressable>
 
-        <TouchableOpacity
-          style={[styles.botaoConfirmar, carregando && styles.botaoDesativado]}
+        <PrimaryButton
+          title="Confirmar"
           onPress={handleConfirmar}
-          disabled={carregando}
-        >
-          {carregando ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
-            <Text style={styles.textoConfirmar}>Confirmar</Text>
-          )}
-        </TouchableOpacity>
+          isLoading={carregando}
+          style={styles.botaoConfirmar}
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

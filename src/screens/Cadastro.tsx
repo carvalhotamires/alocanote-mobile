@@ -5,40 +5,50 @@ import {
   TextInput,
   Alert,
   Pressable,
-  ActivityIndicator,
   Modal,
   FlatList,
-  TouchableOpacity,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import { api } from '../services/api';
+import { authService } from '../services/authService';
+import { getApiErrorMessage } from '../services/api';
+import { Role } from '../types';
+import { AuthStackParamList } from '../types/navigation';
 import { PAISES, Pais } from '../constants/paises';
 import { SeletorPais } from '../components/SeletorPais';
+import { PrimaryButton } from '../components/PrimaryButton';
 import { styles } from './Cadastro.style';
 
-const CARGOS = [
-  { chave: 'PROJETISTA', rotulo: 'Projetista' },
-  { chave: 'CONFERENTE', rotulo: 'Conferente' },
-  { chave: 'CONSULTOR_VENDAS', rotulo: 'Consultor de Vendas' },
-  { chave: 'OUTROS', rotulo: 'Outros' },
+interface CargoItem {
+  chave: Role;
+  rotulo: string;
+}
+
+const CARGOS: CargoItem[] = [
+  { chave: Role.PROJETISTA, rotulo: 'Projetista' },
+  { chave: Role.CONFERENTE, rotulo: 'Conferente' },
+  { chave: Role.CONSULTOR_VENDAS, rotulo: 'Consultor de Vendas' },
+  { chave: Role.OUTROS, rotulo: 'Outros' },
 ];
 
+type CadastroNavProp = NativeStackNavigationProp<AuthStackParamList, 'Cadastro'>;
+
 export function Cadastro() {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<CadastroNavProp>();
 
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [telefone, setTelefone] = useState('');
   const [paisSelecionado, setPaisSelecionado] = useState<Pais>(PAISES[0]);
-  
-  const [cargoSelecionado, setCargoSelecionado] = useState(CARGOS[1]);
+
+  const [cargoSelecionado, setCargoSelecionado] = useState<CargoItem>(CARGOS[1]);
   const [modalCargoVisivel, setModalCargoVisivel] = useState(false);
   const [outroCargo, setOutroCargo] = useState('');
-  
+
   const [isLoading, setIsLoading] = useState(false);
 
   const aplicarMascaraTelefone = (valor: string) => {
@@ -60,7 +70,7 @@ export function Cadastro() {
       return;
     }
 
-    if (cargoSelecionado.chave === 'OUTROS' && !outroCargo.trim()) {
+    if (cargoSelecionado.chave === Role.OUTROS && !outroCargo.trim()) {
       Alert.alert('Campo obrigatório', 'Por favor, digite qual é o seu cargo.');
       return;
     }
@@ -71,18 +81,18 @@ export function Cadastro() {
     const telefoneCompleto = `${ddiLimpo}${telefoneLimpo}`;
 
     try {
-      await api.post('/users/register', {
-        name: nome,
-        email: email,
+      await authService.register({
+        name: nome.trim(),
+        email: email.trim(),
         password: senha,
         phone: telefoneCompleto,
         role: cargoSelecionado.chave,
-        otherRoleDescription: cargoSelecionado.chave === 'OUTROS' ? outroCargo.trim() : null,
+        customRole: cargoSelecionado.chave === Role.OUTROS ? outroCargo.trim() : null,
       });
 
       navigation.navigate('VerificacaoToken', { telefone: telefoneCompleto });
     } catch (error: any) {
-      const mensagem = error?.response?.data?.message || 'Não foi possível realizar o cadastro.';
+      const mensagem = getApiErrorMessage(error, 'Não foi possível realizar o cadastro.');
       Alert.alert('Erro', mensagem);
     } finally {
       setIsLoading(false);
@@ -154,16 +164,15 @@ export function Cadastro() {
 
         <View style={styles.blocoCampo}>
           <Text style={styles.labelCampo}>Cargo</Text>
-          <TouchableOpacity
-            style={styles.selectCargo}
-            activeOpacity={0.7}
+          <Pressable
+            style={({ pressed }) => [styles.selectCargo, pressed && styles.selectCargoPressed]}
             onPress={() => setModalCargoVisivel(true)}
           >
             <Text style={styles.textoCargo}>{cargoSelecionado.rotulo}</Text>
             <Text style={styles.seta}>▼</Text>
-          </TouchableOpacity>
+          </Pressable>
 
-          {cargoSelecionado.chave === 'OUTROS' && (
+          {cargoSelecionado.chave === Role.OUTROS && (
             <TextInput
               style={[styles.inputLilas, styles.inputOutroCargo]}
               placeholder="Digite o seu cargo"
@@ -175,17 +184,11 @@ export function Cadastro() {
           )}
         </View>
 
-        <Pressable
-          style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+        <PrimaryButton
+          title="Cadastrar"
           onPress={handleCadastro}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator color="#FFF" />
-          ) : (
-            <Text style={styles.buttonText}>Cadastrar</Text>
-          )}
-        </Pressable>
+          isLoading={isLoading}
+        />
 
         <Modal
           visible={modalCargoVisivel}
@@ -193,21 +196,21 @@ export function Cadastro() {
           animationType="fade"
           onRequestClose={() => setModalCargoVisivel(false)}
         >
-          <TouchableOpacity
+          <Pressable
             style={styles.modalOverlay}
-            activeOpacity={1}
             onPress={() => setModalCargoVisivel(false)}
           >
-            <View style={styles.modalContent}>
+            <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
               <Text style={styles.modalTitulo}>Selecione o Cargo</Text>
               <FlatList
                 data={CARGOS}
                 keyExtractor={(item) => item.chave}
                 renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={[
+                  <Pressable
+                    style={({ pressed }) => [
                       styles.itemOpcao,
                       item.chave === cargoSelecionado.chave && styles.itemOpcaoAtiva,
+                      pressed && styles.itemOpcaoPressed,
                     ]}
                     onPress={() => {
                       setCargoSelecionado(item);
@@ -222,11 +225,11 @@ export function Cadastro() {
                     >
                       {item.rotulo}
                     </Text>
-                  </TouchableOpacity>
+                  </Pressable>
                 )}
               />
-            </View>
-          </TouchableOpacity>
+            </Pressable>
+          </Pressable>
         </Modal>
       </ScrollView>
     </KeyboardAvoidingView>

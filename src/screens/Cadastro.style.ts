@@ -57,6 +57,12 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  selectCargoPressed: {
+    opacity: 0.8,
+  },
+  itemOpcaoPressed: {
+    backgroundColor: '#F3E8FF',
+  },
   textoCargo: {
     fontSize: 15,
     color: '#1F2937',

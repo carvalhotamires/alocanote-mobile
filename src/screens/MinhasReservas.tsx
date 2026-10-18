@@ -9,7 +9,7 @@ import {
   Pressable,
   RefreshControl,
 } from 'react-native';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { reservationService } from '../services/reservationService';
 import { getApiErrorMessage } from '../services/api';
@@ -20,7 +20,7 @@ export function MinhasReservas() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadingActionId, setLoadingActionId] = useState<number | null>(null);
-  const tabBarHeight = useBottomTabBarHeight();
+  const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
 
   const carregarReservas = useCallback(async () => {
@@ -269,14 +269,26 @@ export function MinhasReservas() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <Text style={styles.headerTitle}>Minhas Reservas</Text>
-        <Text style={styles.headerSubtitle}>Acompanhamento e devoluções</Text>
+      <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
+        <View style={styles.headerTop}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.backButton,
+              pressed && styles.backButtonPressed,
+            ]}
+            onPress={() => navigation.navigate('Home')}
+          >
+            <Text style={styles.backButtonText}>← Início</Text>
+          </Pressable>
+          <Text style={styles.headerTitle}>Minhas Reservas</Text>
+          <View style={{ width: 60 }} />
+        </View>
+        <Text style={styles.headerSubtitle}>Acompanhamento, check-in e devoluções</Text>
       </View>
 
       {isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4B0082" />
+          <ActivityIndicator size="large" color="#7E22CE" />
           <Text style={styles.loadingText}>Carregando reservas...</Text>
         </View>
       ) : (
@@ -284,10 +296,10 @@ export function MinhasReservas() {
           data={reservas}
           keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
-          contentContainerStyle={[styles.listContent, { paddingBottom: tabBarHeight }]}
+          contentContainerStyle={[styles.listContent, { paddingBottom: 85 + insets.bottom }]}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={['#4B0082']} />
+            <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={['#7E22CE']} />
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
@@ -306,34 +318,61 @@ export function MinhasReservas() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F8F6FD',
   },
   header: {
-    backgroundColor: '#4B0082',
-    paddingBottom: 20,
+    backgroundColor: '#5B1B8E',
+    paddingBottom: 24,
     paddingHorizontal: 20,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  backButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  backButtonPressed: {
+    backgroundColor: 'rgba(255, 255, 255, 0.35)',
+  },
+  backButtonText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
   },
   headerTitle: {
     color: '#FFFFFF',
-    fontSize: 22,
-    fontWeight: 'bold',
+    fontSize: 20,
+    fontWeight: '800',
   },
   headerSubtitle: {
     color: '#E9D5FF',
-    fontSize: 14,
-    marginTop: 2,
+    fontSize: 13,
+    textAlign: 'center',
+    fontWeight: '500',
   },
   listContent: {
     padding: 16,
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 18,
+    padding: 18,
     marginBottom: 14,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    elevation: 1,
+    borderWidth: 1.5,
+    borderColor: '#E9D5FF',
+    elevation: 2,
+    shadowColor: '#7E22CE',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
   },
   cardHeader: {
     flexDirection: 'row',

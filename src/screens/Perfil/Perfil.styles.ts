@@ -1,0 +1,141 @@
+import { StyleSheet } from 'react-native';
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F8F6FD',
+  },
+  header: {
+    backgroundColor: '#5B1B8E',
+    paddingHorizontal: 24,
+    paddingBottom: 28,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  backButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  backButtonPressed: {
+    backgroundColor: 'rgba(255, 255, 255, 0.35)',
+  },
+  backButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  headerTitle: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  profileHeaderContent: {
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  avatarBorder: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+    overflow: 'hidden',
+    backgroundColor: '#7E22CE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  userName: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: '800',
+    marginTop: 10,
+  },
+  userRoleBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    marginTop: 6,
+  },
+  userRoleText: {
+    color: '#F3E8FF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  content: {
+    padding: 20,
+  },
+  sectionCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1.5,
+    borderColor: '#E9D5FF',
+    marginBottom: 20,
+    elevation: 2,
+    shadowColor: '#7E22CE',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1E1B4B',
+    marginBottom: 16,
+  },
+  infoRow: {
+    marginBottom: 14,
+  },
+  infoLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6B7280',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  infoValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#F3E8FF',
+    marginVertical: 10,
+  },
+  logoutButton: {
+    backgroundColor: '#DC2626',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  logoutButtonPressed: {
+    backgroundColor: '#B91C1C',
+  },
+  logoutButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+});

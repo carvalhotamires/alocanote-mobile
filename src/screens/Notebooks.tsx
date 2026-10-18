@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { notebookService } from '../services/notebookService';
 import { getApiErrorMessage } from '../services/api';
@@ -28,7 +27,6 @@ export function Notebooks() {
 
   const navigation = useNavigation<NotebooksNavProp>();
   const { user, signOut } = useAuth();
-  const tabBarHeight = useBottomTabBarHeight();
   const insets = useSafeAreaInsets();
 
   const carregarNotebooks = useCallback(async () => {
@@ -117,22 +115,34 @@ export function Notebooks() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <View>
-          <Text style={styles.welcomeText}>Olá, {user?.name || 'Colaborador'}</Text>
-          <Text style={styles.subtitleText}>Notebooks para Reservas</Text>
+      <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
+        <View style={styles.headerTop}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.backButton,
+              pressed && styles.backButtonPressed,
+            ]}
+            onPress={() => navigation.navigate('Home')}
+          >
+            <Text style={styles.backButtonText}>← Início</Text>
+          </Pressable>
+          <Text style={styles.headerTitle}>Notebooks</Text>
+          <Pressable
+            style={({ pressed }) => [
+              styles.logoutButton,
+              pressed && styles.logoutButtonPressed,
+            ]}
+            onPress={signOut}
+          >
+            <Text style={styles.logoutButtonText}>Sair</Text>
+          </Pressable>
         </View>
-        <Pressable
-          style={({ pressed }) => [styles.logoutButton, pressed && styles.logoutButtonPressed]}
-          onPress={signOut}
-        >
-          <Text style={styles.logoutButtonText}>Sair</Text>
-        </Pressable>
+        <Text style={styles.subtitleText}>Equipamentos disponíveis para alocação</Text>
       </View>
 
       {isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4B0082" />
+          <ActivityIndicator size="large" color="#7E22CE" />
           <Text style={styles.loadingText}>Carregando equipamentos...</Text>
         </View>
       ) : (
@@ -140,10 +150,10 @@ export function Notebooks() {
           data={notebooks}
           keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
-          contentContainerStyle={[styles.listContent, { paddingBottom: tabBarHeight }]}
+          contentContainerStyle={[styles.listContent, { paddingBottom: 85 + insets.bottom }]}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={['#4B0082']} />
+            <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={['#7E22CE']} />
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
@@ -159,31 +169,51 @@ export function Notebooks() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F8F6FD',
   },
   header: {
-    backgroundColor: '#4B0082',
-    paddingBottom: 20,
+    backgroundColor: '#5B1B8E',
+    paddingBottom: 24,
     paddingHorizontal: 20,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+  },
+  headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 6,
   },
-  welcomeText: {
-    color: '#E9D5FF',
-    fontSize: 14,
-    fontWeight: '500',
+  backButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
   },
-  subtitleText: {
+  backButtonPressed: {
+    backgroundColor: 'rgba(255, 255, 255, 0.35)',
+  },
+  backButtonText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  headerTitle: {
     color: '#FFFFFF',
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: '800',
+  },
+  subtitleText: {
+    color: '#E9D5FF',
+    fontSize: 13,
+    textAlign: 'center',
+    fontWeight: '500',
   },
   logoutButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   logoutButtonPressed: {
     backgroundColor: 'rgba(255, 255, 255, 0.35)',
@@ -191,19 +221,23 @@ const styles = StyleSheet.create({
   logoutButtonText: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
   listContent: {
     padding: 16,
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 18,
+    padding: 18,
     marginBottom: 14,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    elevation: 1,
+    borderWidth: 1.5,
+    borderColor: '#E9D5FF',
+    elevation: 2,
+    shadowColor: '#7E22CE',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -212,20 +246,20 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   cardTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#1E1B4B',
     flex: 1,
     marginRight: 8,
   },
   badge: {
     paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
   },
   badgeText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   cardDescription: {
     fontSize: 14,
@@ -234,24 +268,25 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   reserveButton: {
-    backgroundColor: '#4B0082',
-    borderRadius: 8,
-    paddingVertical: 10,
+    backgroundColor: '#7E22CE',
+    borderRadius: 10,
+    paddingVertical: 12,
     alignItems: 'center',
+    elevation: 2,
   },
   reserveButtonPressed: {
-    backgroundColor: '#3A0066',
+    backgroundColor: '#6B21A8',
   },
   reserveButtonText: {
     color: '#FFFFFF',
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: 15,
   },
   indisponivelContainer: {
     backgroundColor: '#F3F4F6',
-    paddingVertical: 8,
+    paddingVertical: 10,
     paddingHorizontal: 12,
-    borderRadius: 6,
+    borderRadius: 8,
     alignItems: 'center',
   },
   indisponivelText: {

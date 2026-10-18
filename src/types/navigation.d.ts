@@ -11,7 +11,7 @@ export type AppTabParamList = {
 
 export type AppStackParamList = {
   Home: undefined;
-  MainTabs: undefined;
+  MainTabs: { screen?: keyof AppTabParamList } | undefined;
   Notebooks: undefined;
   MinhasReservas: undefined;
   NovaReserva: { notebookId?: number } | undefined;

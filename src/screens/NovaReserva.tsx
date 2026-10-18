@@ -392,14 +392,14 @@ export function NovaReserva() {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8F6FD',
     flexGrow: 1,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8F6FD',
   },
   loadingText: {
     marginTop: 10,
@@ -408,8 +408,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
+    fontWeight: '800',
+    color: '#1E1B4B',
     marginBottom: 4,
   },
   subtitle: {
@@ -418,35 +418,39 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   fieldBlock: {
-    marginBottom: 14,
+    marginBottom: 16,
   },
   label: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1F2937',
+    color: '#1E1B4B',
     marginBottom: 6,
   },
   input: {
-    height: 48,
-    backgroundColor: '#E9D5FF',
-    borderRadius: 8,
+    height: 50,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E9D5FF',
+    borderRadius: 12,
     paddingHorizontal: 14,
     fontSize: 15,
     color: '#1F2937',
     fontWeight: '500',
   },
   textArea: {
-    height: 80,
+    height: 90,
     textAlignVertical: 'top',
-    paddingTop: 10,
+    paddingTop: 12,
   },
   row: {
     flexDirection: 'row',
   },
   selectBox: {
-    height: 48,
-    backgroundColor: '#E9D5FF',
-    borderRadius: 8,
+    height: 50,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E9D5FF',
+    borderRadius: 12,
     paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',

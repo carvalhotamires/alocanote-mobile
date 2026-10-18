@@ -9,6 +9,8 @@ import {
   Pressable,
   RefreshControl,
 } from 'react-native';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { reservationService } from '../services/reservationService';
 import { getApiErrorMessage } from '../services/api';
 import { ReservationResponseDTO, ReservationStatus } from '../types';
@@ -18,6 +20,8 @@ export function MinhasReservas() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadingActionId, setLoadingActionId] = useState<number | null>(null);
+  const tabBarHeight = useBottomTabBarHeight();
+  const insets = useSafeAreaInsets();
 
   const carregarReservas = useCallback(async () => {
     try {
@@ -265,7 +269,7 @@ export function MinhasReservas() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <Text style={styles.headerTitle}>Minhas Reservas</Text>
         <Text style={styles.headerSubtitle}>Acompanhamento e devoluções</Text>
       </View>
@@ -280,7 +284,7 @@ export function MinhasReservas() {
           data={reservas}
           keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: tabBarHeight }]}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={['#4B0082']} />
@@ -306,7 +310,6 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#4B0082',
-    paddingTop: 52,
     paddingBottom: 20,
     paddingHorizontal: 20,
   },

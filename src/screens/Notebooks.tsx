@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { notebookService } from '../services/notebookService';
 import { getApiErrorMessage } from '../services/api';
 import { NotebookResponseDTO, NotebookStatus } from '../types';
@@ -26,6 +28,8 @@ export function Notebooks() {
 
   const navigation = useNavigation<NotebooksNavProp>();
   const { user, signOut } = useAuth();
+  const tabBarHeight = useBottomTabBarHeight();
+  const insets = useSafeAreaInsets();
 
   const carregarNotebooks = useCallback(async () => {
     try {
@@ -113,7 +117,7 @@ export function Notebooks() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <View>
           <Text style={styles.welcomeText}>Olá, {user?.name || 'Colaborador'}</Text>
           <Text style={styles.subtitleText}>Notebooks para Reservas</Text>
@@ -136,7 +140,7 @@ export function Notebooks() {
           data={notebooks}
           keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: tabBarHeight }]}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={['#4B0082']} />
@@ -159,7 +163,6 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#4B0082',
-    paddingTop: 52,
     paddingBottom: 20,
     paddingHorizontal: 20,
     flexDirection: 'row',

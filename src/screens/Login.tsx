@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { getApiErrorMessage } from '../services/api';
 import { AuthStackParamList } from '../types/navigation';
@@ -24,6 +25,7 @@ export function Login() {
 
   const { signIn } = useAuth();
   const navigation = useNavigation<LoginNavProp>();
+  const insets = useSafeAreaInsets();
 
   const handleLogin = async () => {
     if (!email.trim() || !password) {
@@ -51,7 +53,7 @@ export function Login() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: 24 + insets.bottom }]}>
       <Image
         source={require('../../assets/logo.png')}
         style={styles.logo}

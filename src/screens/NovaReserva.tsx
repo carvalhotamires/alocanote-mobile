@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { notebookService } from '../services/notebookService';
 import { locationService } from '../services/locationService';
 import { reservationService } from '../services/reservationService';
@@ -29,6 +30,7 @@ type NovaReservaRouteProp = RouteProp<AppStackParamList, 'NovaReserva'>;
 export function NovaReserva() {
   const navigation = useNavigation<NovaReservaNavProp>();
   const route = useRoute<NovaReservaRouteProp>();
+  const insets = useSafeAreaInsets();
 
   const preSelectedNotebookId = route.params?.notebookId;
 
@@ -200,7 +202,7 @@ export function NovaReserva() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={{ flex: 1, backgroundColor: '#FFFFFF' }}
     >
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.container, { paddingBottom: Math.max(insets.bottom + 20, 40) }]} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Nova Reserva</Text>
         <Text style={styles.subtitle}>Selecione o equipamento, datas e local de retirada</Text>
 

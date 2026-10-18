@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { authService } from '../services/authService';
 import { getApiErrorMessage } from '../services/api';
 import { Role } from '../types';
@@ -38,6 +39,7 @@ type CadastroNavProp = NativeStackNavigationProp<AuthStackParamList, 'Cadastro'>
 
 export function Cadastro() {
   const navigation = useNavigation<CadastroNavProp>();
+  const insets = useSafeAreaInsets();
 
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
@@ -104,7 +106,7 @@ export function Cadastro() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={{ flex: 1, backgroundColor: '#FFFFFF' }}
     >
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.container, { paddingBottom: 24 + insets.bottom }]} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Criar Conta</Text>
 
         <View style={styles.blocoCampo}>

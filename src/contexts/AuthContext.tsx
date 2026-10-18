@@ -12,6 +12,13 @@ export interface AuthUser {
   role: string;
   phone?: string;
   customRole?: string | null;
+  profilePictureUrl?: string | null;
+  street?: string | null;
+  number?: string | null;
+  neighborhood?: string | null;
+  city?: string | null;
+  state?: string | null;
+  zipCode?: string | null;
 }
 
 interface AuthContextData {
@@ -43,6 +50,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: profile.role,
         phone: profile.phone,
         customRole: profile.customRole,
+        profilePictureUrl: profile.profilePictureUrl,
+        street: profile.street,
+        number: profile.number,
+        neighborhood: profile.neighborhood,
+        city: profile.city,
+        state: profile.state,
+        zipCode: profile.zipCode,
       };
       setUser(updated);
       await Promise.all([
@@ -113,6 +127,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: profile.role || data.role,
         phone: profile.phone,
         customRole: profile.customRole,
+        profilePictureUrl: profile.profilePictureUrl,
+        street: profile.street,
+        number: profile.number,
+        neighborhood: profile.neighborhood,
+        city: profile.city,
+        state: profile.state,
+        zipCode: profile.zipCode,
       };
     } catch {
       // Caso a rota /users/me falhe, mantemos os dados de login

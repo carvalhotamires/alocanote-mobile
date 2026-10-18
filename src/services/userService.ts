@@ -1,5 +1,5 @@
 import { api } from './api';
-import { UserResponseDTO } from '../types';
+import { UpdateUserProfileRequestDTO, UserResponseDTO } from '../types';
 
 export const userService = {
   async listUsers(): Promise<UserResponseDTO[]> {
@@ -9,6 +9,11 @@ export const userService = {
 
   async getMyProfile(): Promise<UserResponseDTO> {
     const response = await api.get<UserResponseDTO>('/users/me');
+    return response.data;
+  },
+
+  async updateMyProfile(data: UpdateUserProfileRequestDTO): Promise<UserResponseDTO> {
+    const response = await api.put<UserResponseDTO>('/users/me', data);
     return response.data;
   },
 };

@@ -17,10 +17,9 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { notebookService } from '../services/notebookService';
-import { locationService } from '../services/locationService';
 import { reservationService } from '../services/reservationService';
 import { getApiErrorMessage } from '../services/api';
-import { NotebookResponseDTO, LocationResponseDTO, NotebookStatus } from '../types';
+import { NotebookResponseDTO, NotebookStatus } from '../types';
 import { AppStackParamList } from '../types/navigation';
 import { PrimaryButton } from '../components/PrimaryButton/PrimaryButton';
 
@@ -35,9 +34,7 @@ export function NovaReserva() {
   const preSelectedNotebookId = route.params?.notebookId;
 
   const [notebooks, setNotebooks] = useState<NotebookResponseDTO[]>([]);
-  const [locations, setLocations] = useState<LocationResponseDTO[]>([]);
   const [selectedNotebook, setSelectedNotebook] = useState<NotebookResponseDTO | null>(null);
-  const [selectedLocation, setSelectedLocation] = useState<LocationResponseDTO | null>(null);
 
   // Campos de data/hora (DD/MM/AAAA e HH:mm)
   const [dataInicio, setDataInicio] = useState('');
@@ -50,31 +47,22 @@ export function NovaReserva() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [modalNotebookVisible, setModalNotebookVisible] = useState(false);
-  const [modalLocationVisible, setModalLocationVisible] = useState(false);
 
   useEffect(() => {
     async function carregarDados() {
       try {
-        const [listaNotebooks, listaLocais] = await Promise.all([
-          notebookService.listNotebooks(),
-          locationService.listLocations(),
-        ]);
+        const listaNotebooks = await notebookService.listNotebooks();
 
         const disponiveis = listaNotebooks.filter(
           (nb) => nb.status === NotebookStatus.DISPONIVEL
         );
         setNotebooks(disponiveis);
-        setLocations(listaLocais);
 
         if (preSelectedNotebookId) {
           const encontrado = disponiveis.find((nb) => nb.id === preSelectedNotebookId);
           if (encontrado) setSelectedNotebook(encontrado);
         } else if (disponiveis.length > 0) {
           setSelectedNotebook(disponiveis[0]);
-        }
-
-        if (listaLocais.length > 0) {
-          setSelectedLocation(listaLocais[0]);
         }
 
         // Sugerir a data de amanhã por padrão
@@ -137,11 +125,6 @@ export function NovaReserva() {
       return;
     }
 
-    if (!selectedLocation) {
-      Alert.alert('Local', 'Selecione um local de retirada.');
-      return;
-    }
-
     const isoInicio = converterParaISO(dataInicio, horaInicio);
     const isoTermino = converterParaISO(dataTermino, horaTermino);
 
@@ -168,7 +151,6 @@ export function NovaReserva() {
     try {
       await reservationService.createReservation({
         notebookId: selectedNotebook.id,
-        locationId: selectedLocation.id,
         startTime: isoInicio,
         endTime: isoTermino,
         purpose: purpose.trim(),
@@ -202,9 +184,17 @@ export function NovaReserva() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={{ flex: 1, backgroundColor: '#FFFFFF' }}
     >
-      <ScrollView contentContainerStyle={[styles.container, { paddingBottom: Math.max(insets.bottom + 20, 40) }]} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.container,
+          { paddingBottom: Math.max(insets.bottom + 20, 40) },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.title}>Nova Reserva</Text>
-        <Text style={styles.subtitle}>Selecione o equipamento, datas e local de retirada</Text>
+        <Text style={styles.subtitle}>
+          Selecione o equipamento, datas e finalidade do uso (o local de retirada será confirmado no check-in)
+        </Text>
 
         {/* Seleção de Notebook */}
         <View style={styles.fieldBlock}>
@@ -217,22 +207,6 @@ export function NovaReserva() {
               {selectedNotebook
                 ? `${selectedNotebook.name} (${selectedNotebook.modelDescription})`
                 : 'Nenhum notebook disponível'}
-            </Text>
-            <Text style={styles.arrowText}>▼</Text>
-          </Pressable>
-        </View>
-
-        {/* Seleção de Local de Retirada */}
-        <View style={styles.fieldBlock}>
-          <Text style={styles.label}>Local de Retirada</Text>
-          <Pressable
-            style={({ pressed }) => [styles.selectBox, pressed && styles.selectBoxPressed]}
-            onPress={() => setModalLocationVisible(true)}
-          >
-            <Text style={styles.selectText}>
-              {selectedLocation
-                ? `${selectedLocation.name} - ${selectedLocation.address}`
-                : 'Selecione um local'}
             </Text>
             <Text style={styles.arrowText}>▼</Text>
           </Pressable>
@@ -344,42 +318,6 @@ export function NovaReserva() {
                 ListEmptyComponent={
                   <Text style={styles.emptyModalText}>Nenhum equipamento disponível no momento.</Text>
                 }
-              />
-            </Pressable>
-          </Pressable>
-        </Modal>
-
-        {/* Modal de Locais */}
-        <Modal
-          visible={modalLocationVisible}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setModalLocationVisible(false)}
-        >
-          <Pressable style={styles.modalOverlay} onPress={() => setModalLocationVisible(false)}>
-            <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
-              <Text style={styles.modalTitle}>Selecione o Local de Retirada</Text>
-              <FlatList
-                data={locations}
-                keyExtractor={(item) => String(item.id)}
-                renderItem={({ item }) => (
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.modalItem,
-                      item.id === selectedLocation?.id && styles.modalItemActive,
-                      pressed && styles.modalItemPressed,
-                    ]}
-                    onPress={() => {
-                      setSelectedLocation(item);
-                      setModalLocationVisible(false);
-                    }}
-                  >
-                    <Text style={styles.modalItemTitle}>{item.name}</Text>
-                    <Text style={styles.modalItemSubtitle}>
-                      {item.address} - CEP: {item.cep}
-                    </Text>
-                  </Pressable>
-                )}
               />
             </Pressable>
           </Pressable>

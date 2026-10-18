@@ -1,5 +1,10 @@
 import { api } from './api';
-import { CreateReservationRequestDTO, ReservationResponseDTO } from '../types';
+import {
+  CheckInReservationRequestDTO,
+  CreateReservationRequestDTO,
+  FinishReservationRequestDTO,
+  ReservationResponseDTO,
+} from '../types';
 
 export const reservationService = {
   async createReservation(data: CreateReservationRequestDTO): Promise<ReservationResponseDTO> {
@@ -17,8 +22,11 @@ export const reservationService = {
     return response.data;
   },
 
-  async checkInReservation(id: number): Promise<ReservationResponseDTO> {
-    const response = await api.patch<ReservationResponseDTO>(`/reservations/${id}/check-in`);
+  async checkInReservation(
+    id: number,
+    data?: CheckInReservationRequestDTO
+  ): Promise<ReservationResponseDTO> {
+    const response = await api.patch<ReservationResponseDTO>(`/reservations/${id}/check-in`, data);
     return response.data;
   },
 
@@ -27,8 +35,11 @@ export const reservationService = {
     return response.data;
   },
 
-  async finishReservation(id: number): Promise<ReservationResponseDTO> {
-    const response = await api.patch<ReservationResponseDTO>(`/reservations/${id}/finish`);
+  async finishReservation(
+    id: number,
+    data?: FinishReservationRequestDTO
+  ): Promise<ReservationResponseDTO> {
+    const response = await api.patch<ReservationResponseDTO>(`/reservations/${id}/finish`, data);
     return response.data;
   },
 };

@@ -2,12 +2,16 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api, setAuthToken, TOKEN_STORAGE_KEY, USER_STORAGE_KEY } from '../services/api';
 import { authService } from '../services/authService';
+import { userService } from '../services/userService';
 import { LoginRequestDTO, LoginResponseDTO } from '../types';
 
 export interface AuthUser {
+  id?: number;
   email: string;
   name: string;
   role: string;
+  phone?: string;
+  customRole?: string | null;
 }
 
 interface AuthContextData {
@@ -19,6 +23,7 @@ interface AuthContextData {
   loading: boolean;
   signIn: (credentials: LoginRequestDTO) => Promise<LoginResponseDTO>;
   signOut: () => Promise<void>;
+  refreshUserProfile: () => Promise<AuthUser | null>;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -27,6 +32,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+
+  const refreshUserProfile = async (): Promise<AuthUser | null> => {
+    try {
+      const profile = await userService.getMyProfile();
+      const updated: AuthUser = {
+        id: profile.id,
+        email: profile.email,
+        name: profile.name,
+        role: profile.role,
+        phone: profile.phone,
+        customRole: profile.customRole,
+      };
+      setUser(updated);
+      await Promise.all([
+        AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updated)),
+        AsyncStorage.setItem('@AlocaNote:user', JSON.stringify(updated)),
+      ]);
+      return updated;
+    } catch {
+      return null;
+    }
+  };
 
   useEffect(() => {
     async function loadStorageData() {
@@ -41,6 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           api.defaults.headers.Authorization = `Bearer ${storedToken}`;
           setToken(storedToken);
           setUser(JSON.parse(storedUser));
+          // Atualiza em background para garantir dados frescos do perfil
+          refreshUserProfile();
         } else {
           // Fallback para chave antiga caso já estivesse salvo
           const fallbackToken = await AsyncStorage.getItem('@AlocaNote:token');
@@ -50,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             api.defaults.headers.Authorization = `Bearer ${fallbackToken}`;
             setToken(fallbackToken);
             setUser(JSON.parse(fallbackUser));
+            refreshUserProfile();
           }
         }
       } catch (error) {
@@ -64,14 +94,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (credentials: LoginRequestDTO): Promise<LoginResponseDTO> => {
     const data = await authService.login(credentials);
-    const authUser: AuthUser = {
+
+    setAuthToken(data.token);
+    api.defaults.headers.Authorization = `Bearer ${data.token}`;
+
+    let authUser: AuthUser = {
       email: data.email,
       name: data.name,
       role: data.role,
     };
 
-    setAuthToken(data.token);
-    api.defaults.headers.Authorization = `Bearer ${data.token}`;
+    try {
+      const profile = await userService.getMyProfile();
+      authUser = {
+        id: profile.id,
+        email: profile.email,
+        name: profile.name,
+        role: profile.role || data.role,
+        phone: profile.phone,
+        customRole: profile.customRole,
+      };
+    } catch {
+      // Caso a rota /users/me falhe, mantemos os dados de login
+    }
+
     await Promise.all([
       AsyncStorage.setItem(TOKEN_STORAGE_KEY, data.token),
       AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(authUser)),
@@ -108,6 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading: isLoadingAuth,
         signIn,
         signOut,
+        refreshUserProfile,
       }}
     >
       {children}

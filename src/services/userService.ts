@@ -6,4 +6,9 @@ export const userService = {
     const response = await api.get<UserResponseDTO[]>('/users');
     return response.data;
   },
+
+  async getMyProfile(): Promise<UserResponseDTO> {
+    const response = await api.get<UserResponseDTO>('/users/me');
+    return response.data;
+  },
 };

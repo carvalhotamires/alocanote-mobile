@@ -34,6 +34,24 @@ export const styles = StyleSheet.create({
     color: '#1F2937',
     fontWeight: '500',
   },
+  senhaContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 50,
+    backgroundColor: '#E9D5FF',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+  },
+  senhaInput: {
+    flex: 1,
+    fontSize: 15,
+    color: '#1F2937',
+    fontWeight: '500',
+  },
+  botaoOlho: {
+    paddingLeft: 10,
+    paddingVertical: 6,
+  },
   telefoneContainer: {
     flexDirection: 'row',
     alignItems: 'center',

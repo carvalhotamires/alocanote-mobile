@@ -14,6 +14,7 @@ import {
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { authService } from '../../services/authService';
 import { getApiErrorMessage } from '../../services/api';
 import { Role } from '../../types';
@@ -44,6 +45,7 @@ export function Cadastro() {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [mostrarSenha, setMostrarSenha] = useState(false);
   const [telefone, setTelefone] = useState('');
   const [paisSelecionado, setPaisSelecionado] = useState<Pais>(PAISES[0]);
 
@@ -66,8 +68,9 @@ export function Cadastro() {
 
   const handleCadastro = async () => {
     const telefoneLimpo = telefone.replace(/\D/g, '');
+    const emailLimpo = email.trim().toLowerCase();
 
-    if (!nome.trim() || !email.trim() || !senha.trim() || !telefoneLimpo) {
+    if (!nome.trim() || !emailLimpo || !senha.trim() || !telefoneLimpo) {
       Alert.alert('Campos obrigatórios', 'Por favor, preencha todos os campos.');
       return;
     }
@@ -85,14 +88,17 @@ export function Cadastro() {
     try {
       await authService.register({
         name: nome.trim(),
-        email: email.trim(),
+        email: emailLimpo,
         password: senha,
         phone: telefoneCompleto,
         role: cargoSelecionado.chave,
         customRole: cargoSelecionado.chave === Role.OUTROS ? outroCargo.trim() : null,
       });
 
-      navigation.navigate('VerificacaoToken', { telefone: telefoneCompleto });
+      navigation.navigate('VerificacaoToken', {
+        telefone: telefoneCompleto,
+        email: emailLimpo,
+      });
     } catch (error: any) {
       const mensagem = getApiErrorMessage(error, 'Não foi possível realizar o cadastro.');
       Alert.alert('Erro', mensagem);
@@ -129,20 +135,36 @@ export function Cadastro() {
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
+            autoCorrect={false}
             keyboardType="email-address"
           />
         </View>
 
         <View style={styles.blocoCampo}>
           <Text style={styles.labelCampo}>Senha</Text>
-          <TextInput
-            style={styles.inputLilas}
-            placeholder="Digite sua senha"
-            placeholderTextColor="#7E758C"
-            value={senha}
-            onChangeText={setSenha}
-            secureTextEntry
-          />
+          <View style={styles.senhaContainer}>
+            <TextInput
+              style={styles.senhaInput}
+              placeholder="Digite sua senha"
+              placeholderTextColor="#7E758C"
+              value={senha}
+              onChangeText={setSenha}
+              secureTextEntry={!mostrarSenha}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <Pressable
+              onPress={() => setMostrarSenha((prev) => !prev)}
+              style={styles.botaoOlho}
+              hitSlop={8}
+            >
+              <Ionicons
+                name={mostrarSenha ? 'eye-off-outline' : 'eye-outline'}
+                size={22}
+                color="#4B0082"
+              />
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.blocoCampo}>

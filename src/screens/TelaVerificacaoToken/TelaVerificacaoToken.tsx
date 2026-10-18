@@ -4,20 +4,20 @@ import {
   Text,
   TextInput,
   Pressable,
-  SafeAreaView,
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
   Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { authService } from '../services/authService';
-import { getApiErrorMessage } from '../services/api';
-import { AuthStackParamList } from '../types/navigation';
-import { PrimaryButton } from '../components/PrimaryButton';
-import { styles } from './TelaVerificacaoToken.styles';
+import { authService } from '../../services/authService';
+import { getApiErrorMessage } from '../../services/api';
+import { AuthStackParamList } from '../../types/navigation';
+import { PrimaryButton } from '../../components/PrimaryButton/PrimaryButton';
+import { styles } from './TelaVerificacaoTokens.styles';
 
 type VerificacaoTokenNavProp = NativeStackNavigationProp<AuthStackParamList, 'VerificacaoToken'>;
 type VerificacaoTokenRouteProp = RouteProp<AuthStackParamList, 'VerificacaoToken'>;
@@ -121,7 +121,7 @@ export function TelaVerificacaoToken() {
       >
         <View style={styles.logoContainer}>
           <Image
-            source={require('../../assets/logo.png')}
+            source={require('../../../assets/logo.png')}
             style={styles.logo}
             resizeMode="contain"
           />

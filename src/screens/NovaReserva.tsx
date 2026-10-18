@@ -22,7 +22,7 @@ import { reservationService } from '../services/reservationService';
 import { getApiErrorMessage } from '../services/api';
 import { NotebookResponseDTO, LocationResponseDTO, NotebookStatus } from '../types';
 import { AppStackParamList } from '../types/navigation';
-import { PrimaryButton } from '../components/PrimaryButton';
+import { PrimaryButton } from '../components/PrimaryButton/PrimaryButton';
 
 type NovaReservaNavProp = NativeStackNavigationProp<AppStackParamList, 'NovaReserva'>;
 type NovaReservaRouteProp = RouteProp<AppStackParamList, 'NovaReserva'>;

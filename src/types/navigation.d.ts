@@ -1,7 +1,7 @@
 export type AuthStackParamList = {
   Login: undefined;
   Cadastro: undefined;
-  VerificacaoToken: { telefone: string };
+  VerificacaoToken: { telefone?: string } | undefined;
 };
 
 export type AppTabParamList = {
@@ -10,9 +10,14 @@ export type AppTabParamList = {
 };
 
 export type AppStackParamList = {
+  Home: undefined;
   MainTabs: undefined;
+  Notebooks: undefined;
+  MinhasReservas: undefined;
   NovaReserva: { notebookId?: number } | undefined;
-  DetalhesReserva: { reservationId: number };
+  Calendario: undefined;
+  Perfil: undefined;
+  DetalhesReserva?: { reservationId: number };
 };
 
 export type RootStackParamList = AuthStackParamList & AppStackParamList & {

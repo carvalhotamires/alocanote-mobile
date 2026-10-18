@@ -14,14 +14,14 @@ import {
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { authService } from '../services/authService';
-import { getApiErrorMessage } from '../services/api';
-import { Role } from '../types';
-import { AuthStackParamList } from '../types/navigation';
-import { PAISES, Pais } from '../constants/paises';
-import { SeletorPais } from '../components/SeletorPais';
-import { PrimaryButton } from '../components/PrimaryButton';
-import { styles } from './Cadastro.style';
+import { authService } from '../../services/authService';
+import { getApiErrorMessage } from '../../services/api';
+import { Role } from '../../types';
+import { AuthStackParamList } from '../../types/navigation';
+import { PAISES, Pais } from '../../constants/paises';
+import { SeletorPais } from '../../components/SeletorPais/SeletorPais';
+import { PrimaryButton } from '../../components/PrimaryButton/PrimaryButton';
+import { styles } from './Cadastro.styles';
 
 interface CargoItem {
   chave: Role;

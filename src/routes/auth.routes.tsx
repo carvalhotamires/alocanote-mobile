@@ -1,8 +1,8 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Login } from '../screens/Login';
-import { Cadastro } from '../screens/Cadastro';
-import { TelaVerificacaoToken } from '../screens/TelaVerificacaoToken';
+import { Login } from '../screens/Login/Login';
+import { Cadastro } from '../screens/Cadastro/Cadastro';
+import { TelaVerificacaoToken } from '../screens/TelaVerificacaoToken/TelaVerificacaoToken';
 import { AuthStackParamList } from '../types/navigation';
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();

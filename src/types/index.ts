@@ -119,3 +119,10 @@ export interface StandardError {
   error?: string;
   message: string;
 }
+
+export interface Notebook {
+  id: number;
+  name: string;
+  status: NotebookStatus;
+  currentUser?: User;
+}

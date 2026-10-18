@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Home } from '../screens/Home/Home';
 import { Notebooks } from '../screens/Notebooks';
 import { MinhasReservas } from '../screens/MinhasReservas';
 import { NovaReserva } from '../screens/NovaReserva';
@@ -56,7 +57,12 @@ function AppTabs() {
 
 export function AppRoutes() {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator initialRouteName="Home">
+      <Stack.Screen
+        name="Home"
+        component={Home}
+        options={{ headerShown: false }}
+      />
       <Stack.Screen
         name="MainTabs"
         component={AppTabs}
@@ -67,6 +73,16 @@ export function AppRoutes() {
         component={NovaReserva}
         options={{
           title: 'Agendar Notebook',
+          headerStyle: { backgroundColor: '#4B0082' },
+          headerTintColor: '#FFFFFF',
+          headerTitleStyle: { fontWeight: 'bold' },
+        }}
+      />
+      <Stack.Screen
+        name="Calendario"
+        component={MinhasReservas}
+        options={{
+          title: 'Minhas Reservas',
           headerStyle: { backgroundColor: '#4B0082' },
           headerTintColor: '#FFFFFF',
           headerTitleStyle: { fontWeight: 'bold' },

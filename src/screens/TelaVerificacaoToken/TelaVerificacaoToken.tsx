@@ -27,6 +27,7 @@ export function TelaVerificacaoToken() {
   const route = useRoute<VerificacaoTokenRouteProp>();
 
   const telefone = route.params?.telefone || '';
+  const email = route.params?.email || '';
 
   const [codigo, setCodigo] = useState<string[]>(['', '', '', '', '', '']);
   const [carregando, setCarregando] = useState(false);
@@ -83,7 +84,7 @@ export function TelaVerificacaoToken() {
       Alert.alert('Sucesso', 'Token validado com sucesso!', [
         {
           text: 'Ir para o Login',
-          onPress: () => navigation.navigate('Login'),
+          onPress: () => navigation.navigate('Login', email ? { email } : undefined),
         },
       ]);
     } catch (erro: any) {

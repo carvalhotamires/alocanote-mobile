@@ -65,7 +65,9 @@ export function Home({ navigation }: HomeProps) {
             >
               <Image
                 source={{
-                  uri: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300',
+                  uri:
+                    user?.profilePictureUrl ||
+                    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300',
                 }}
                 style={styles.avatarImage}
               />

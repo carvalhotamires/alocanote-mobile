@@ -48,6 +48,22 @@ export interface RegisterUserRequestDTO {
   customRole?: string | null;
 }
 
+export interface UpdateUserProfileRequestDTO {
+  name?: string;
+  phone?: string;
+  profilePictureUrl?: string | null;
+  role?: Role;
+  customRole?: string | null;
+  street?: string | null;
+  number?: string | null;
+  neighborhood?: string | null;
+  city?: string | null;
+  state?: string | null;
+  zipCode?: string | null;
+  currentPassword?: string;
+  newPassword?: string;
+}
+
 export interface LoginRequestDTO {
   email: string;
   password: string;

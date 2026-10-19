@@ -27,6 +27,25 @@ export const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     fontSize: 16,
+    color: '#1F2937',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#D1C4E9',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: 16,
+    fontSize: 16,
+    color: '#1F2937',
+  },
+  eyeButton: {
+    paddingLeft: 10,
+    paddingVertical: 8,
   },
   button: {
     backgroundColor: '#6A1B9A',

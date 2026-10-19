@@ -1,17 +1,73 @@
-import axios from 'axios';
+﻿import axios from 'axios';
+import { NativeModules, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const TOKEN_STORAGE_KEY = '@alocanote:token';
 export const USER_STORAGE_KEY = '@alocanote:user';
 
+const BACKEND_PORT = '8082';
+const FALLBACK_LAN_IP = '192.168.18.9';
+
+function extractHostFromUrl(url?: string | null): string | null {
+  if (!url) return null;
+  const match = url.match(/^(?:https?:\/\/|exp:\/\/)?([^/:?#]+)/i);
+  return match?.[1] || null;
+}
+
+function isTunnelOrLocalhost(host: string): boolean {
+  return (
+    host === 'localhost' ||
+    host === '127.0.0.1' ||
+    host.endsWith('.exp.direct') ||
+    host.endsWith('.ngrok.io') ||
+    host.endsWith('.ngrok-free.app')
+  );
+}
+
+function getExpoBundleHost(): string | null {
+  try {
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location?.hostname) {
+      return window.location.hostname;
+    }
+    const scriptURL: string | undefined = NativeModules?.SourceCode?.scriptURL;
+    const host = extractHostFromUrl(scriptURL);
+    if (host && !isTunnelOrLocalhost(host)) {
+      return host;
+    }
+  } catch {
+    // Ignora falha ao inspecionar NativeModules
+  }
+  return null;
+}
+
+export function resolveApiBaseUrl(): string {
+  const liveExpoHost = getExpoBundleHost();
+  if (liveExpoHost) {
+    return `http://${liveExpoHost}:${BACKEND_PORT}`;
+  }
+
+  const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
+  if (envUrl) {
+    const normalizedPortUrl = envUrl.replace(':8081', `:${BACKEND_PORT}`);
+    if (normalizedPortUrl.includes('172.20.10.3')) {
+      return `http://${FALLBACK_LAN_IP}:${BACKEND_PORT}`;
+    }
+    return normalizedPortUrl;
+  }
+
+  return `http://${FALLBACK_LAN_IP}:${BACKEND_PORT}`;
+}
+
 export const api = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL,
+  baseURL: resolveApiBaseUrl(),
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
 api.interceptors.request.use(async (config) => {
+  config.baseURL = resolveApiBaseUrl();
   try {
     const token =
       (await AsyncStorage.getItem(TOKEN_STORAGE_KEY)) ||
@@ -36,6 +92,9 @@ export const setAuthToken = (token?: string | null) => {
 export function getApiErrorMessage(error: any, fallbackMessage = 'Ocorreu um erro inesperado.'): string {
   if (error?.response?.data?.message) {
     return error.response.data.message;
+  }
+  if (error?.code === 'ECONNABORTED' || error?.message?.includes('Network Error')) {
+    return `Não foi possível conectar ao servidor (${resolveApiBaseUrl()}). Verifique se o backend está rodando e na mesma rede Wi-Fi.`;
   }
   if (error?.message) {
     return error.message;

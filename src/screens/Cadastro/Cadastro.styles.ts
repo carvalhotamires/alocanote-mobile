@@ -96,23 +96,59 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#C084FC',
   },
-  button: {
-    backgroundColor: '#4B0082',
-    height: 50,
-    borderRadius: 8,
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 14,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E5E7EB',
+  },
+  dividerText: {
+    marginHorizontal: 12,
+    fontSize: 13,
+    color: '#6B7280',
+    fontWeight: '600',
+  },
+  googleButton: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 12,
-    elevation: 2,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    height: 50,
+    paddingHorizontal: 16,
   },
-  buttonPressed: {
-    opacity: 0.85,
-    backgroundColor: '#3A0066',
+  googleButtonPressed: {
+    backgroundColor: '#F3F4F6',
+    opacity: 0.9,
   },
-  buttonText: {
-    color: '#FFFFFF',
+  googleButtonText: {
+    marginLeft: 10,
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  loginPressable: {
+    marginTop: 18,
+    alignItems: 'center',
+    padding: 8,
+  },
+  loginPressed: {
+    opacity: 0.6,
+  },
+  loginText: {
+    textAlign: 'center',
+    color: '#666',
+    fontSize: 14,
+  },
+  loginLink: {
+    color: '#4B0082',
     fontWeight: 'bold',
-    fontSize: 16,
   },
   modalOverlay: {
     flex: 1,
@@ -153,5 +189,70 @@ export const styles = StyleSheet.create({
   textoOpcaoAtiva: {
     color: '#7E22CE',
     fontWeight: '700',
+  },
+  googleModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  googleModalTitle: {
+    fontSize: 17,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginLeft: 8,
+  },
+  googleModalSubtitle: {
+    fontSize: 13,
+    color: '#4B5563',
+    textAlign: 'center',
+    marginBottom: 14,
+  },
+  googleModalInput: {
+    backgroundColor: '#F3E8FF',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: '#1F2937',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#D8B4FE',
+  },
+  googleModalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 6,
+  },
+  googleModalCancelButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginRight: 8,
+  },
+  googleModalCancelPressed: {
+    backgroundColor: '#F3F4F6',
+  },
+  googleModalCancelText: {
+    color: '#4B5563',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  googleModalConfirmButton: {
+    backgroundColor: '#4B0082',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  googleModalConfirmPressed: {
+    backgroundColor: '#3A0066',
+    opacity: 0.9,
+  },
+  googleModalConfirmText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
 });

@@ -2,7 +2,6 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Login } from '../screens/Login/Login';
 import { Cadastro } from '../screens/Cadastro/Cadastro';
-import { TelaVerificacaoToken } from '../screens/TelaVerificacaoToken/TelaVerificacaoToken';
 import { AuthStackParamList } from '../types/navigation';
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
@@ -12,7 +11,6 @@ export function AuthRoutes() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Login" component={Login} />
       <Stack.Screen name="Cadastro" component={Cadastro} />
-      <Stack.Screen name="VerificacaoToken" component={TelaVerificacaoToken} />
     </Stack.Navigator>
   );
 }

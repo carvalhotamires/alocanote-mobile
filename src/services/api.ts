@@ -13,7 +13,9 @@ export const api = axios.create({
 
 api.interceptors.request.use(async (config) => {
   try {
-    const token = await AsyncStorage.getItem(TOKEN_STORAGE_KEY);
+    const token =
+      (await AsyncStorage.getItem(TOKEN_STORAGE_KEY)) ||
+      (await AsyncStorage.getItem('@AlocaNote:token'));
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }

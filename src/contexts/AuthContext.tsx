@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api, setAuthToken, TOKEN_STORAGE_KEY, USER_STORAGE_KEY } from '../services/api';
-import { authService } from '../services/authService';
+import { authService, GoogleSignInParams } from '../services/authService';
 import { userService } from '../services/userService';
 import { LoginRequestDTO, LoginResponseDTO } from '../types';
 
@@ -29,6 +29,7 @@ interface AuthContextData {
   isLoadingAuth: boolean;
   loading: boolean;
   signIn: (credentials: LoginRequestDTO) => Promise<LoginResponseDTO>;
+  signInWithGoogle: (params?: GoogleSignInParams) => Promise<LoginResponseDTO>;
   signOut: () => Promise<void>;
   refreshUserProfile: () => Promise<AuthUser | null>;
 }
@@ -82,10 +83,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           api.defaults.headers.Authorization = `Bearer ${storedToken}`;
           setToken(storedToken);
           setUser(JSON.parse(storedUser));
-          // Atualiza em background para garantir dados frescos do perfil
           refreshUserProfile();
         } else {
-          // Fallback para chave antiga caso já estivesse salvo
           const fallbackToken = await AsyncStorage.getItem('@AlocaNote:token');
           const fallbackUser = await AsyncStorage.getItem('@AlocaNote:user');
           if (fallbackToken && fallbackUser) {
@@ -106,11 +105,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loadStorageData();
   }, []);
 
-  const signIn = async (credentials: LoginRequestDTO): Promise<LoginResponseDTO> => {
-    const data = await authService.login(credentials);
-
+  const persistAuthSession = async (data: LoginResponseDTO): Promise<LoginResponseDTO> => {
     setAuthToken(data.token);
     api.defaults.headers.Authorization = `Bearer ${data.token}`;
+
+    await Promise.all([
+      AsyncStorage.setItem(TOKEN_STORAGE_KEY, data.token),
+      AsyncStorage.setItem('@AlocaNote:token', data.token),
+    ]);
 
     let authUser: AuthUser = {
       email: data.email,
@@ -136,19 +138,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         zipCode: profile.zipCode,
       };
     } catch {
-      // Caso a rota /users/me falhe, mantemos os dados de login
+      // Caso a rota /users/me falhe, mantemos os dados retornados no login
     }
 
     await Promise.all([
-      AsyncStorage.setItem(TOKEN_STORAGE_KEY, data.token),
       AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(authUser)),
-      AsyncStorage.setItem('@AlocaNote:token', data.token),
       AsyncStorage.setItem('@AlocaNote:user', JSON.stringify(authUser)),
     ]);
 
     setToken(data.token);
     setUser(authUser);
     return data;
+  };
+
+  const signIn = async (credentials: LoginRequestDTO): Promise<LoginResponseDTO> => {
+    const data = await authService.login(credentials);
+    return persistAuthSession(data);
+  };
+
+  const signInWithGoogle = async (params?: GoogleSignInParams): Promise<LoginResponseDTO> => {
+    const data = await authService.authenticateWithGoogle(params);
+    return persistAuthSession(data);
   };
 
   const signOut = async () => {
@@ -174,6 +184,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoadingAuth,
         loading: isLoadingAuth,
         signIn,
+        signInWithGoogle,
         signOut,
         refreshUserProfile,
       }}

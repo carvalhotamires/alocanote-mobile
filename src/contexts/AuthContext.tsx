@@ -1,68 +1,171 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { api } from '../services/api';
+import { api, setAuthToken, TOKEN_STORAGE_KEY, USER_STORAGE_KEY } from '../services/api';
+import { authService } from '../services/authService';
+import { userService } from '../services/userService';
+import { LoginRequestDTO, LoginResponseDTO } from '../types';
 
-interface User {
-  name: string;
+export interface AuthUser {
+  id?: number;
   email: string;
+  name: string;
   role: string;
+  phone?: string;
+  customRole?: string | null;
 }
 
 interface AuthContextData {
+  user: AuthUser | null;
+  token: string | null;
+  isAuthenticated: boolean;
   signed: boolean;
-  user: User | null;
+  isLoadingAuth: boolean;
   loading: boolean;
-  signIn: (token: string, user: User) => Promise<void>;
+  signIn: (credentials: LoginRequestDTO) => Promise<LoginResponseDTO>;
   signOut: () => Promise<void>;
+  refreshUserProfile: () => Promise<AuthUser | null>;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
-export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+
+  const refreshUserProfile = async (): Promise<AuthUser | null> => {
+    try {
+      const profile = await userService.getMyProfile();
+      const updated: AuthUser = {
+        id: profile.id,
+        email: profile.email,
+        name: profile.name,
+        role: profile.role,
+        phone: profile.phone,
+        customRole: profile.customRole,
+      };
+      setUser(updated);
+      await Promise.all([
+        AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updated)),
+        AsyncStorage.setItem('@AlocaNote:user', JSON.stringify(updated)),
+      ]);
+      return updated;
+    } catch {
+      return null;
+    }
+  };
 
   useEffect(() => {
     async function loadStorageData() {
       try {
-        const storageUser = await AsyncStorage.getItem('@AlocaNote:user');
-        const storageToken = await AsyncStorage.getItem('@AlocaNote:token');
+        const [storedToken, storedUser] = await Promise.all([
+          AsyncStorage.getItem(TOKEN_STORAGE_KEY),
+          AsyncStorage.getItem(USER_STORAGE_KEY),
+        ]);
 
-        if (storageUser && storageToken) {
-          api.defaults.headers.Authorization = `Bearer ${storageToken}`;
-          setUser(JSON.parse(storageUser));
+        if (storedToken && storedUser) {
+          setAuthToken(storedToken);
+          api.defaults.headers.Authorization = `Bearer ${storedToken}`;
+          setToken(storedToken);
+          setUser(JSON.parse(storedUser));
+          // Atualiza em background para garantir dados frescos do perfil
+          refreshUserProfile();
+        } else {
+          // Fallback para chave antiga caso já estivesse salvo
+          const fallbackToken = await AsyncStorage.getItem('@AlocaNote:token');
+          const fallbackUser = await AsyncStorage.getItem('@AlocaNote:user');
+          if (fallbackToken && fallbackUser) {
+            setAuthToken(fallbackToken);
+            api.defaults.headers.Authorization = `Bearer ${fallbackToken}`;
+            setToken(fallbackToken);
+            setUser(JSON.parse(fallbackUser));
+            refreshUserProfile();
+          }
         }
       } catch (error) {
-        console.error('Erro ao carregar sessão do usuário:', error);
+        console.error('Falha ao restaurar autenticação:', error);
       } finally {
-        setLoading(false);
+        setIsLoadingAuth(false);
       }
     }
 
     loadStorageData();
   }, []);
 
-  async function signIn(token: string, loggedUser: User) {
-    setUser(loggedUser);
-    api.defaults.headers.Authorization = `Bearer ${token}`;
-    
-    await AsyncStorage.setItem('@AlocaNote:user', JSON.stringify(loggedUser));
-    await AsyncStorage.setItem('@AlocaNote:token', token);
-  }
+  const signIn = async (credentials: LoginRequestDTO): Promise<LoginResponseDTO> => {
+    const data = await authService.login(credentials);
 
-  async function signOut() {
-    await AsyncStorage.removeItem('@AlocaNote:user');
-    await AsyncStorage.removeItem('@AlocaNote:token');
+    setAuthToken(data.token);
+    api.defaults.headers.Authorization = `Bearer ${data.token}`;
+
+    let authUser: AuthUser = {
+      email: data.email,
+      name: data.name,
+      role: data.role,
+    };
+
+    try {
+      const profile = await userService.getMyProfile();
+      authUser = {
+        id: profile.id,
+        email: profile.email,
+        name: profile.name,
+        role: profile.role || data.role,
+        phone: profile.phone,
+        customRole: profile.customRole,
+      };
+    } catch {
+      // Caso a rota /users/me falhe, mantemos os dados de login
+    }
+
+    await Promise.all([
+      AsyncStorage.setItem(TOKEN_STORAGE_KEY, data.token),
+      AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(authUser)),
+      AsyncStorage.setItem('@AlocaNote:token', data.token),
+      AsyncStorage.setItem('@AlocaNote:user', JSON.stringify(authUser)),
+    ]);
+
+    setToken(data.token);
+    setUser(authUser);
+    return data;
+  };
+
+  const signOut = async () => {
+    setAuthToken(null);
+    delete api.defaults.headers.Authorization;
+    await Promise.all([
+      AsyncStorage.removeItem(TOKEN_STORAGE_KEY),
+      AsyncStorage.removeItem(USER_STORAGE_KEY),
+      AsyncStorage.removeItem('@AlocaNote:token'),
+      AsyncStorage.removeItem('@AlocaNote:user'),
+    ]);
+    setToken(null);
     setUser(null);
-  }
+  };
 
   return (
-    <AuthContext.Provider value={{ signed: !!user, user, loading, signIn, signOut }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        isAuthenticated: !!token,
+        signed: !!token,
+        isLoadingAuth,
+        loading: isLoadingAuth,
+        signIn,
+        signOut,
+        refreshUserProfile,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
 export function useAuth() {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth deve ser utilizado dentro de um AuthProvider');
+  }
+  return context;
 }

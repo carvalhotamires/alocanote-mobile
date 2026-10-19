@@ -2,7 +2,7 @@ import React from 'react';
 import {
   Text,
   View,
-  TouchableOpacity,
+  Pressable,
   Image,
   ScrollView,
   SafeAreaView,
@@ -14,6 +14,7 @@ import {
   Feather,
   MaterialCommunityIcons,
 } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
 import { styles } from './Home.styles';
 
@@ -23,13 +24,31 @@ interface HomeProps {
 
 export function Home({ navigation }: HomeProps) {
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
+
+  const primeiroNome = user?.name ? user.name.trim().split(' ')[0] : 'Colaborador';
+
+  const handleOpenNotebooks = () => {
+    navigation?.navigate('MainTabs', { screen: 'Notebooks' });
+  };
+
+  const handleOpenReservas = () => {
+    navigation?.navigate('MainTabs', { screen: 'MinhasReservas' });
+  };
+
+  const handleOpenPerfil = () => {
+    navigation?.navigate('Perfil');
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#4C1D95" />
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: 110 + insets.bottom },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         {/* Cabeçalho Curvo Roxo */}
@@ -37,29 +56,29 @@ export function Home({ navigation }: HomeProps) {
           <View style={styles.headerTop}>
             <View style={styles.greetingContainer}>
               <Text style={styles.greetingTitle}>Bem-vindo,</Text>
-              <Text style={styles.greetingName}>
-                {user?.name || 'Tamires'}!
-              </Text>
+              <Text style={styles.greetingName}>{primeiroNome}!</Text>
             </View>
 
-           <View style={styles.avatarBorder}>
-            <Image
-              source={{
-                uri: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300',
-              }}
-              style={styles.avatarImage}
-            />
+            <Pressable
+              style={styles.avatarBorder}
+              onPress={handleOpenPerfil}
+            >
+              <Image
+                source={{
+                  uri: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300',
+                }}
+                style={styles.avatarImage}
+              />
+            </Pressable>
           </View>
         </View>
-      </View>
 
         {/* Lista de Ações / Cards */}
         <View style={styles.cardsContainer}>
           {/* Card: Notebooks */}
-          <TouchableOpacity
-            style={styles.card}
-            activeOpacity={0.8}
-            onPress={() => navigation?.navigate('Notebooks')}
+          <Pressable
+            style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}
+            onPress={handleOpenNotebooks}
           >
             <LinearGradient
               colors={['#7E22CE', '#9333EA']}
@@ -78,13 +97,12 @@ export function Home({ navigation }: HomeProps) {
             <View style={styles.actionArrowCircle}>
               <Feather name="arrow-right" size={20} color="#FFFFFF" />
             </View>
-          </TouchableOpacity>
+          </Pressable>
 
           {/* Card: Meu Perfil */}
-          <TouchableOpacity
-            style={styles.card}
-            activeOpacity={0.8}
-            onPress={() => navigation?.navigate('Perfil')}
+          <Pressable
+            style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}
+            onPress={handleOpenPerfil}
           >
             <LinearGradient
               colors={['#7E22CE', '#9333EA']}
@@ -103,13 +121,12 @@ export function Home({ navigation }: HomeProps) {
             <View style={styles.actionArrowCircle}>
               <Feather name="arrow-right" size={20} color="#FFFFFF" />
             </View>
-          </TouchableOpacity>
+          </Pressable>
 
           {/* Card: Calendário */}
-          <TouchableOpacity
-            style={styles.card}
-            activeOpacity={0.8}
-            onPress={() => navigation?.navigate('Calendario')}
+          <Pressable
+            style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}
+            onPress={handleOpenReservas}
           >
             <LinearGradient
               colors={['#7E22CE', '#9333EA']}
@@ -128,23 +145,33 @@ export function Home({ navigation }: HomeProps) {
             <View style={styles.actionArrowCircle}>
               <Feather name="arrow-right" size={20} color="#FFFFFF" />
             </View>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </ScrollView>
 
       {/* Menu Inferior */}
-      <View style={styles.bottomNavContainer}>
-        <TouchableOpacity
-          style={styles.navButton}
-          onPress={() => navigation?.navigate('Perfil')}
+      <View
+        style={[
+          styles.bottomNavContainer,
+          {
+            height: 70 + insets.bottom,
+            paddingBottom: insets.bottom,
+          },
+        ]}
+      >
+        <Pressable
+          style={({ pressed }) => [styles.navButton, pressed && { opacity: 0.6 }]}
+          onPress={handleOpenPerfil}
         >
           <Feather name="user" size={28} color="#9CA3AF" />
-        </TouchableOpacity>
+        </Pressable>
 
-        <TouchableOpacity
-          style={styles.floatingCenterButton}
-          activeOpacity={0.9}
-          onPress={() => navigation?.navigate('Notebooks')}
+        <Pressable
+          style={({ pressed }) => [
+            styles.floatingCenterButton,
+            pressed && { opacity: 0.85 },
+          ]}
+          onPress={handleOpenNotebooks}
         >
           <LinearGradient
             colors={['#C084FC', '#7E22CE']}
@@ -152,14 +179,14 @@ export function Home({ navigation }: HomeProps) {
           >
             <MaterialCommunityIcons name="laptop" size={28} color="#FFFFFF" />
           </LinearGradient>
-        </TouchableOpacity>
+        </Pressable>
 
-        <TouchableOpacity
-          style={styles.navButton}
-          onPress={() => navigation?.navigate('Calendario')}
+        <Pressable
+          style={({ pressed }) => [styles.navButton, pressed && { opacity: 0.6 }]}
+          onPress={handleOpenReservas}
         >
           <Ionicons name="calendar-outline" size={28} color="#9CA3AF" />
-        </TouchableOpacity>
+        </Pressable>
       </View>
     </SafeAreaView>
   );

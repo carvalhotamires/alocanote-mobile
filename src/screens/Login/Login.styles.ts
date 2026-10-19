@@ -44,9 +44,21 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  registerPressable: {
+    marginTop: 20,
+    alignItems: 'center',
+    padding: 8,
+  },
+  registerPressed: {
+    opacity: 0.6,
+  },
   registerText: {
     textAlign: 'center',
     color: '#666',
     fontSize: 14,
+  },
+  registerLink: {
+    color: '#4B0082',
+    fontWeight: 'bold',
   },
 });

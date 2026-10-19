@@ -1,21 +1,43 @@
 import React from 'react';
-import { Text, Pressable, PressableProps } from 'react-native';
+import { Text, Pressable, PressableProps, ActivityIndicator, StyleProp, ViewStyle, TextStyle } from 'react-native';
 import { styles } from './PrimaryButton.styles';
 
-interface PrimaryButtonProps extends PressableProps {
+export interface PrimaryButtonProps extends PressableProps {
   title: string;
+  isLoading?: boolean;
+  variant?: 'primary' | 'danger' | 'secondary' | 'outline';
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
 }
 
-export function PrimaryButton({ title, ...rest }: PrimaryButtonProps) {
+export function PrimaryButton({
+  title,
+  isLoading = false,
+  variant = 'primary',
+  disabled,
+  style,
+  textStyle,
+  ...rest
+}: PrimaryButtonProps) {
+  const isButtonDisabled = disabled || isLoading;
+
   return (
     <Pressable
       style={({ pressed }) => [
-        styles.button,
-        pressed && styles.buttonPressed,
+        styles.baseButton,
+        styles[variant],
+        pressed && styles[`${variant}Pressed`],
+        isButtonDisabled && styles.buttonDisabled,
+        style,
       ]}
+      disabled={isButtonDisabled}
       {...rest}
     >
-      <Text style={styles.buttonText}>{title}</Text>
+      {isLoading ? (
+        <ActivityIndicator color={variant === 'outline' ? '#4B0082' : '#FFFFFF'} />
+      ) : (
+        <Text style={[styles.baseText, styles[`${variant}Text`], textStyle]}>{title}</Text>
+      )}
     </Pressable>
   );
 }

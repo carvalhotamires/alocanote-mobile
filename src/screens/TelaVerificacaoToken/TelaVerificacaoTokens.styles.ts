@@ -63,6 +63,9 @@ export const styles = StyleSheet.create({
     paddingVertical: 10,
     marginBottom: 36,
   },
+  botaoReenviarPressed: {
+    opacity: 0.6,
+  },
   textoReenviar: {
     color: '#6B21A8',
     fontWeight: '700',

@@ -7,6 +7,9 @@ export const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingRight: 6,
   },
+  ddiPressed: {
+    opacity: 0.7,
+  },
   bandeira: {
     fontSize: 18,
     marginRight: 4,
@@ -60,6 +63,9 @@ export const styles = StyleSheet.create({
   itemOpcaoAtiva: {
     backgroundColor: '#FAF5FF',
     borderRadius: 8,
+  },
+  itemOpcaoPressed: {
+    backgroundColor: '#F3E8FF',
   },
   bandeiraItem: {
     fontSize: 22,

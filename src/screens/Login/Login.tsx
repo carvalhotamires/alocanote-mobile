@@ -1,52 +1,50 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  Alert, 
-  Image, 
-  Pressable, 
-  ActivityIndicator 
+import {
+  View,
+  Text,
+  TextInput,
+  Alert,
+  Image,
+  Pressable,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { api } from '../../services/api';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../contexts/AuthContext';
+import { getApiErrorMessage } from '../../services/api';
+import { AuthStackParamList } from '../../types/navigation';
+import { PrimaryButton } from '../../components/PrimaryButton/PrimaryButton';
 import { styles } from './Login.styles';
+
+type LoginNavProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
 
 export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const navigation = useNavigation<any>();
+
   const { signIn } = useAuth();
-  
+  const navigation = useNavigation<LoginNavProp>();
+
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Campos obrigatórios', 'Por favor, preencha o email e a senha.');
+    if (!email.trim() || !password) {
+      Alert.alert('Campos obrigatórios', 'Por favor, preencha o e-mail e a senha.');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const response = await api.post('/auth/login', { 
-        email: email, 
-        password: password 
+      await signIn({
+        email: email.trim(),
+        password,
       });
-
-      const { token, name, email: userEmail, role } = response.data;
-      
-      await signIn(token, { name, email: userEmail, role });
-      
-      Alert.alert('Sucesso', 'Login efetuado com sucesso!');
-
     } catch (error) {
-      console.error(error);
-      Alert.alert(
-        'Erro na Autenticação', 
-        'Credenciais inválidas ou não foi possível contactar o servidor.'
+      const mensagem = getApiErrorMessage(
+        error,
+        'Credenciais inválidas ou não foi possível conectar ao servidor.'
       );
+      Alert.alert('Erro na Autenticação', mensagem);
     } finally {
       setIsLoading(false);
     }
@@ -54,17 +52,18 @@ export function Login() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Image 
-        source={require('../../../assets/logo.png')} 
-        style={styles.logo} 
-        resizeMode="contain" 
+      <Image
+        source={require('../../../assets/logo.png')}
+        style={styles.logo}
+        resizeMode="contain"
       />
 
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Email ou Usuário</Text>
-        <TextInput 
+        <Text style={styles.label}>E-mail</Text>
+        <TextInput
           style={styles.input}
-          placeholder="Seu email ou usuário"
+          placeholder="Seu e-mail cadastrado"
+          placeholderTextColor="#7E758C"
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
@@ -72,34 +71,32 @@ export function Login() {
         />
 
         <Text style={styles.label}>Senha</Text>
-        <TextInput 
+        <TextInput
           style={styles.input}
-          placeholder="Senha"
+          placeholder="Sua senha de acesso"
+          placeholderTextColor="#7E758C"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
         />
       </View>
 
-      <Pressable 
-        style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]} 
+      <PrimaryButton
+        title="Entrar"
         onPress={handleLogin}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <ActivityIndicator color="#FFF" />
-        ) : (
-          <Text style={styles.buttonText}>Entrar</Text>
-        )}
-      </Pressable>
+        isLoading={isLoading}
+      />
 
-      <Pressable 
+      <Pressable
         onPress={() => navigation.navigate('Cadastro')}
         style={({ pressed }) => [
-          pressed && { opacity: 0.6 }
+          styles.registerPressable,
+          pressed && styles.registerPressed,
         ]}
       >
-        <Text style={styles.registerText}>Não tem conta? Cadastre-se</Text>
+        <Text style={styles.registerText}>
+          Não tem conta? <Text style={styles.registerLink}>Cadastre-se</Text>
+        </Text>
       </Pressable>
     </SafeAreaView>
   );

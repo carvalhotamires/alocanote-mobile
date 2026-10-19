@@ -15,6 +15,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/authService';
 import { getApiErrorMessage } from '../../services/api';
 import { Role } from '../../types';
@@ -41,15 +42,17 @@ type CadastroNavProp = NativeStackNavigationProp<AuthStackParamList, 'Cadastro'>
 export function Cadastro() {
   const navigation = useNavigation<CadastroNavProp>();
   const insets = useSafeAreaInsets();
+  const { signIn } = useAuth();
 
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
+  const [confirmarEmail, setConfirmarEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [telefone, setTelefone] = useState('');
   const [paisSelecionado, setPaisSelecionado] = useState<Pais>(PAISES[0]);
 
-  const [cargoSelecionado, setCargoSelecionado] = useState<CargoItem>(CARGOS[1]);
+  const [cargoSelecionado, setCargoSelecionado] = useState<CargoItem>(CARGOS[0]);
   const [modalCargoVisivel, setModalCargoVisivel] = useState(false);
   const [outroCargo, setOutroCargo] = useState('');
 
@@ -67,11 +70,18 @@ export function Cadastro() {
   };
 
   const handleCadastro = async () => {
-    const telefoneLimpo = telefone.replace(/\D/g, '');
+    const nomeLimpo = nome.trim();
     const emailLimpo = email.trim().toLowerCase();
+    const confirmarEmailLimpo = confirmarEmail.trim().toLowerCase();
+    const senhaLimpa = senha.trim();
 
-    if (!nome.trim() || !emailLimpo || !senha.trim() || !telefoneLimpo) {
-      Alert.alert('Campos obrigatórios', 'Por favor, preencha todos os campos.');
+    if (!nomeLimpo || !emailLimpo || !confirmarEmailLimpo || !senhaLimpa) {
+      Alert.alert('Campos obrigatórios', 'Por favor, preencha nome, e-mail, confirmação de e-mail e senha.');
+      return;
+    }
+
+    if (emailLimpo !== confirmarEmailLimpo) {
+      Alert.alert('E-mails não coincidem', 'O e-mail digitado e a confirmação de e-mail devem ser iguais.');
       return;
     }
 
@@ -82,26 +92,39 @@ export function Cadastro() {
 
     setIsLoading(true);
 
+    const telefoneLimpo = telefone.replace(/\D/g, '');
     const ddiLimpo = paisSelecionado.ddi.replace('+', '');
-    const telefoneCompleto = `${ddiLimpo}${telefoneLimpo}`;
+    const telefoneCompleto = telefoneLimpo ? `${ddiLimpo}${telefoneLimpo}` : undefined;
 
     try {
       await authService.register({
-        name: nome.trim(),
+        name: nomeLimpo,
         email: emailLimpo,
-        password: senha,
+        password: senhaLimpa,
         phone: telefoneCompleto,
         role: cargoSelecionado.chave,
         customRole: cargoSelecionado.chave === Role.OUTROS ? outroCargo.trim() : null,
       });
 
-      navigation.navigate('VerificacaoToken', {
-        telefone: telefoneCompleto,
-        email: emailLimpo,
-      });
+      Alert.alert(
+        'Conta Criada com Sucesso!',
+        'Seu cadastro foi realizado. Um e-mail de confirmação foi enviado para o seu endereço.',
+        [
+          {
+            text: 'Entrar agora',
+            onPress: async () => {
+              try {
+                await signIn({ email: emailLimpo, password: senhaLimpa });
+              } catch {
+                navigation.navigate('Login', { email: emailLimpo });
+              }
+            },
+          },
+        ]
+      );
     } catch (error: any) {
       const mensagem = getApiErrorMessage(error, 'Não foi possível realizar o cadastro.');
-      Alert.alert('Erro', mensagem);
+      Alert.alert('Erro no Cadastro', mensagem);
     } finally {
       setIsLoading(false);
     }
@@ -112,7 +135,10 @@ export function Cadastro() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={{ flex: 1, backgroundColor: '#FFFFFF' }}
     >
-      <ScrollView contentContainerStyle={[styles.container, { paddingBottom: 24 + insets.bottom }]} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[styles.container, { paddingBottom: 24 + insets.bottom }]}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.title}>Criar Conta</Text>
 
         <View style={styles.blocoCampo}>
@@ -134,6 +160,20 @@ export function Cadastro() {
             placeholderTextColor="#7E758C"
             value={email}
             onChangeText={setEmail}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+          />
+        </View>
+
+        <View style={styles.blocoCampo}>
+          <Text style={styles.labelCampo}>Confirmar E-mail</Text>
+          <TextInput
+            style={styles.inputLilas}
+            placeholder="Confirme o seu e-mail"
+            placeholderTextColor="#7E758C"
+            value={confirmarEmail}
+            onChangeText={setConfirmarEmail}
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="email-address"
@@ -168,7 +208,7 @@ export function Cadastro() {
         </View>
 
         <View style={styles.blocoCampo}>
-          <Text style={styles.labelCampo}>Telefone</Text>
+          <Text style={styles.labelCampo}>Telefone (opcional)</Text>
           <View style={styles.telefoneContainer}>
             <SeletorPais
               paisSelecionado={paisSelecionado}
@@ -213,6 +253,18 @@ export function Cadastro() {
           onPress={handleCadastro}
           isLoading={isLoading}
         />
+
+        <Pressable
+          onPress={() => navigation.navigate('Login')}
+          style={({ pressed }) => [
+            styles.loginPressable,
+            pressed && styles.loginPressed,
+          ]}
+        >
+          <Text style={styles.loginText}>
+            Já tem conta? <Text style={styles.loginLink}>Faça Login</Text>
+          </Text>
+        </Pressable>
 
         <Modal
           visible={modalCargoVisivel}

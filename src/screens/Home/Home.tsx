@@ -55,7 +55,7 @@ export function Home({ navigation }: HomeProps) {
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <View style={styles.greetingContainer}>
-              <Text style={styles.greetingTitle}>Bem-vindo,</Text>
+              <Text style={styles.greetingTitle}>Olá,</Text>
               <Text style={styles.greetingName}>{primeiroNome}!</Text>
             </View>
 

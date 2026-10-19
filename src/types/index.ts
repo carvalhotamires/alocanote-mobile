@@ -43,8 +43,8 @@ export interface RegisterUserRequestDTO {
   name: string;
   email: string;
   password: string;
-  phone: string;
-  role: Role;
+  phone?: string;
+  role?: Role;
   customRole?: string | null;
 }
 
@@ -69,21 +69,22 @@ export interface LoginRequestDTO {
   password: string;
 }
 
+export interface FirebaseAuthRequestDTO {
+  idToken: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  profilePictureUrl?: string | null;
+  role?: Role;
+  customRole?: string | null;
+}
+
 export interface LoginResponseDTO {
   token: string;
   type: string;
   email: string;
   name: string;
   role: string;
-}
-
-export interface SendSmsRequestDTO {
-  phone: string;
-}
-
-export interface TokenValidationRequestDTO {
-  phone: string;
-  code: string;
 }
 
 export interface NotebookResponseDTO {

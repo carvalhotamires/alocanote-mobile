@@ -110,8 +110,23 @@ export interface CreateReservationRequestDTO {
   notebookId: number;
   startTime: string; // ISO-8601 ex: '2026-11-15T09:00:00'
   endTime: string;   // ISO-8601 ex: '2026-11-15T12:00:00'
-  locationId: number;
+  locationId?: number | null;
   purpose: string;
+}
+
+export interface CheckInReservationRequestDTO {
+  locationType?: string;
+  address?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+}
+
+export interface FinishReservationRequestDTO {
+  locationType?: string;
+  address?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  photoUrl?: string | null;
 }
 
 export interface ReservationResponseDTO {
@@ -123,10 +138,21 @@ export interface ReservationResponseDTO {
   notebookModel: string;
   startTime: string;
   endTime: string;
-  locationId: number;
-  locationName: string;
+  locationId?: number | null;
+  locationName?: string | null;
   status: ReservationStatus;
   purpose: string;
+  checkInLocationType?: string | null;
+  checkInAddress?: string | null;
+  checkInLatitude?: number | null;
+  checkInLongitude?: number | null;
+  checkInAt?: string | null;
+  returnLocationType?: string | null;
+  returnAddress?: string | null;
+  returnLatitude?: number | null;
+  returnLongitude?: number | null;
+  returnPhotoUrl?: string | null;
+  returnedAt?: string | null;
 }
 
 export interface StandardError {

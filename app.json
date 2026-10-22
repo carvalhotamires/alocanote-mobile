@@ -27,7 +27,13 @@
     "plugins": [
       "expo-asset",
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Permitir que o AlocaNote acesse sua localização para registrar o local de retirada e devolução do notebook."
+        }
+      ]
     ]
   }
 }

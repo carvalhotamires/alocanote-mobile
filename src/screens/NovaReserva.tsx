@@ -85,6 +85,19 @@ export function NovaReserva() {
     carregarDados();
   }, [preSelectedNotebookId]);
 
+  const formatarData = (texto: string): string => {
+    const digitos = texto.replace(/\D/g, '').slice(0, 8);
+    if (digitos.length <= 2) return digitos;
+    if (digitos.length <= 4) return `${digitos.slice(0, 2)}/${digitos.slice(2)}`;
+    return `${digitos.slice(0, 2)}/${digitos.slice(2, 4)}/${digitos.slice(4, 8)}`;
+  };
+
+  const formatarHora = (texto: string): string => {
+    const digitos = texto.replace(/\D/g, '').slice(0, 4);
+    if (digitos.length <= 2) return digitos;
+    return `${digitos.slice(0, 2)}:${digitos.slice(2, 4)}`;
+  };
+
   const converterParaISO = (dataStr: string, horaStr: string): string | null => {
     // Formato esperado dataStr: DD/MM/AAAA ou AAAA-MM-DD
     // Formato esperado horaStr: HH:mm
@@ -111,10 +124,35 @@ export function NovaReserva() {
     }
 
     const partesHora = horaStr.split(':');
-    const horas = partesHora[0]?.padStart(2, '0') || '00';
-    const minutos = partesHora[1]?.padStart(2, '0') || '00';
+    if (partesHora.length !== 2 || !partesHora[0] || !partesHora[1]) return null;
 
-    if (!ano || !mes || !dia) return null;
+    const horas = partesHora[0].padStart(2, '0');
+    const minutos = partesHora[1].padStart(2, '0');
+
+    const numDia = Number(dia);
+    const numMes = Number(mes);
+    const numAno = Number(ano);
+    const numHoras = Number(horas);
+    const numMinutos = Number(minutos);
+
+    if (
+      ano.length !== 4 ||
+      !numDia ||
+      numDia < 1 ||
+      numDia > 31 ||
+      !numMes ||
+      numMes < 1 ||
+      numMes > 12 ||
+      isNaN(numAno) ||
+      isNaN(numHoras) ||
+      numHoras < 0 ||
+      numHoras > 23 ||
+      isNaN(numMinutos) ||
+      numMinutos < 0 ||
+      numMinutos > 59
+    ) {
+      return null;
+    }
 
     return `${ano}-${mes}-${dia}T${horas}:${minutos}:00`;
   };
@@ -221,8 +259,9 @@ export function NovaReserva() {
               placeholder="DD/MM/AAAA"
               placeholderTextColor="#7E758C"
               value={dataInicio}
-              onChangeText={setDataInicio}
+              onChangeText={(texto) => setDataInicio(formatarData(texto))}
               keyboardType="numeric"
+              maxLength={10}
             />
           </View>
 
@@ -233,8 +272,9 @@ export function NovaReserva() {
               placeholder="09:00"
               placeholderTextColor="#7E758C"
               value={horaInicio}
-              onChangeText={setHoraInicio}
+              onChangeText={(texto) => setHoraInicio(formatarHora(texto))}
               keyboardType="numeric"
+              maxLength={5}
             />
           </View>
         </View>
@@ -248,8 +288,9 @@ export function NovaReserva() {
               placeholder="DD/MM/AAAA"
               placeholderTextColor="#7E758C"
               value={dataTermino}
-              onChangeText={setDataTermino}
+              onChangeText={(texto) => setDataTermino(formatarData(texto))}
               keyboardType="numeric"
+              maxLength={10}
             />
           </View>
 
@@ -260,8 +301,9 @@ export function NovaReserva() {
               placeholder="12:00"
               placeholderTextColor="#7E758C"
               value={horaTermino}
-              onChangeText={setHoraTermino}
+              onChangeText={(texto) => setHoraTermino(formatarHora(texto))}
               keyboardType="numeric"
+              maxLength={5}
             />
           </View>
         </View>

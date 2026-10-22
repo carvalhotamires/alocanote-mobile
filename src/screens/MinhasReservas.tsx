@@ -17,6 +17,7 @@ import {
   Platform,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { reservationService } from '../services/reservationService';
@@ -94,6 +95,29 @@ export function MinhasReservas() {
   };
 
   const obterEnderecoPorCoordenadas = async (lat: number, lng: number): Promise<string> => {
+    // 1. Geocodificação reversa nativa do dispositivo (Google Play Services / Apple CoreLocation)
+    if (Platform.OS !== 'web') {
+      try {
+        const locais = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lng });
+        if (Array.isArray(locais) && locais.length > 0) {
+          const item = locais[0];
+          const numero =
+            item.streetNumber || (item.name && item.name !== item.street ? item.name : null);
+          const ruaNumero = [item.street, numero].filter(Boolean).join(', ');
+          const cidadeUf = [item.city || item.subregion, item.region].filter(Boolean).join(' - ');
+          const cep = item.postalCode ? `CEP ${item.postalCode}` : null;
+
+          const partes = [ruaNumero, item.district, cidadeUf, cep].filter(Boolean);
+          if (partes.length > 0 && (ruaNumero || item.district)) {
+            return partes.join(', ');
+          }
+        }
+      } catch {
+        // Continua para Nominatim abaixo
+      }
+    }
+
+    // 2. Geocodificação reversa via OpenStreetMap Nominatim
     try {
       const response = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
@@ -106,6 +130,22 @@ export function MinhasReservas() {
       );
       if (response.ok) {
         const data = await response.json();
+        if (data?.address) {
+          const addr = data.address;
+          const rua = addr.road || addr.pedestrian || addr.suburb;
+          const numero = addr.house_number;
+          const ruaNumero = [rua, numero].filter(Boolean).join(', ');
+          const bairro = addr.suburb || addr.neighbourhood || addr.quarter;
+          const cidade = addr.city || addr.town || addr.municipality || addr.village;
+          const estado = addr.state_code || addr.state;
+          const cidadeUf = [cidade, estado].filter(Boolean).join(' - ');
+          const cep = addr.postcode ? `CEP ${addr.postcode}` : null;
+
+          const partes = [ruaNumero, bairro !== rua ? bairro : null, cidadeUf, cep].filter(Boolean);
+          if (partes.length > 0) {
+            return partes.join(', ');
+          }
+        }
         if (data?.display_name) {
           return data.display_name;
         }
@@ -117,12 +157,62 @@ export function MinhasReservas() {
     return `Coordenadas GPS: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
   };
 
-  const obterPosicaoAtualDispositivo = async (): Promise<{
+  const obterPosicaoAtualDispositivo = async (
+    mostrarAlerta = false
+  ): Promise<{
     latitude: number;
     longitude: number;
     address: string;
   } | null> => {
-    // 1. Tenta usar navigator.geolocation caso disponível no runtime nativo
+    // 1. Usa o GPS nativo via expo-location (Android / iOS / Web)
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        if (mostrarAlerta) {
+          Alert.alert(
+            'Permissão de Localização',
+            'Permita o acesso à localização (GPS) nas configurações do aparelho para detectar seu endereço atual com precisão.'
+          );
+        }
+        return null;
+      }
+
+      const servicoAtivo = await Location.hasServicesEnabledAsync();
+      if (!servicoAtivo) {
+        if (mostrarAlerta) {
+          Alert.alert(
+            'GPS Desativado',
+            'Ative a localização (GPS) do seu aparelho e tente tocar em "Detectar Local" novamente.'
+          );
+        }
+        return null;
+      }
+
+      let position: Location.LocationObject | null = null;
+      try {
+        position = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Highest,
+        });
+      } catch {
+        try {
+          position = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
+        } catch {
+          position = await Location.getLastKnownPositionAsync();
+        }
+      }
+
+      if (position?.coords) {
+        const { latitude, longitude } = position.coords;
+        const address = await obterEnderecoPorCoordenadas(latitude, longitude);
+        return { latitude, longitude, address };
+      }
+    } catch {
+      // Continua para tentativa via navigator.geolocation (Web)
+    }
+
+    // 2. Fallback para navigator.geolocation (navegadores Web)
     const geo = (globalThis as any)?.navigator?.geolocation;
     if (geo && typeof geo.getCurrentPosition === 'function') {
       try {
@@ -135,39 +225,25 @@ export function MinhasReservas() {
                   longitude: pos.coords.longitude,
                 }),
               (err: any) => reject(err),
-              { enableHighAccuracy: true, timeout: 6000, maximumAge: 10000 }
+              { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
           }
         );
         const address = await obterEnderecoPorCoordenadas(coords.latitude, coords.longitude);
         return { latitude: coords.latitude, longitude: coords.longitude, address };
       } catch {
-        // Continua para geolocalização de rede abaixo
-      }
-    }
-
-    // 2. Fallback via API de geolocalização + geocodificação reversa
-    try {
-      const res = await fetch('https://ipwho.is/');
-      if (res.ok) {
-        const data = await res.json();
-        if (data && typeof data.latitude === 'number' && typeof data.longitude === 'number') {
-          const enderecoDetalhado = await obterEnderecoPorCoordenadas(
-            data.latitude,
-            data.longitude
+        if (mostrarAlerta) {
+          Alert.alert(
+            'Não foi possível detectar o local',
+            'Verifique se a permissão de localização e o GPS estão ativados ou digite o CEP/endereço manualmente.'
           );
-          const cidadeEstado = [data.city, data.region_code, data.country]
-            .filter(Boolean)
-            .join(' - ');
-          return {
-            latitude: data.latitude,
-            longitude: data.longitude,
-            address: enderecoDetalhado || cidadeEstado,
-          };
         }
       }
-    } catch {
-      // Ignora erro silenciosamente
+    } else if (mostrarAlerta) {
+      Alert.alert(
+        'Não foi possível detectar o local',
+        'Verifique se o GPS está ativado ou digite o CEP/endereço manualmente.'
+      );
     }
 
     return null;
@@ -255,10 +331,10 @@ export function MinhasReservas() {
     endereco?: string | null
   ) => {
     let url = 'https://www.google.com/maps';
-    if (endereco && endereco.trim().length > 0) {
-      url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco.trim())}`;
-    } else if (lat != null && lng != null) {
+    if (lat != null && lng != null) {
       url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    } else if (endereco && endereco.trim().length > 0) {
+      url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco.trim())}`;
     }
 
     try {
@@ -269,11 +345,14 @@ export function MinhasReservas() {
   };
 
   // --- Fluxo de Check-in (Retirada) ---
-  const capturarLocalizacaoCheckIn = async (reservaRef?: ReservationResponseDTO | null) => {
+  const capturarLocalizacaoCheckIn = async (
+    reservaRef?: ReservationResponseDTO | null,
+    manual = false
+  ) => {
     setIsGettingCheckInLocation(true);
     setCheckInSuggestions([]);
     try {
-      const pos = await obterPosicaoAtualDispositivo();
+      const pos = await obterPosicaoAtualDispositivo(manual);
       if (pos) {
         setCheckInLatitude(pos.latitude);
         setCheckInLongitude(pos.longitude);
@@ -365,11 +444,11 @@ export function MinhasReservas() {
   };
 
   // --- Fluxo de Devolução / Finalização (Local + Foto Automática) ---
-  const capturarLocalizacaoDevolucao = async () => {
+  const capturarLocalizacaoDevolucao = async (manual = false) => {
     setIsGettingReturnLocation(true);
     setReturnSuggestions([]);
     try {
-      const pos = await obterPosicaoAtualDispositivo();
+      const pos = await obterPosicaoAtualDispositivo(manual);
       if (pos) {
         setReturnLatitude(pos.latitude);
         setReturnLongitude(pos.longitude);
@@ -930,7 +1009,7 @@ export function MinhasReservas() {
                       styles.googleSmallButton,
                       pressed && styles.googleSmallButtonPressed,
                     ]}
-                    onPress={() => capturarLocalizacaoCheckIn(selectedReservaCheckIn)}
+                    onPress={() => capturarLocalizacaoCheckIn(selectedReservaCheckIn, true)}
                     disabled={isGettingCheckInLocation}
                   >
                     <Text style={styles.googleSmallButtonText}>🔄 Detectar Local</Text>
@@ -1166,7 +1245,7 @@ export function MinhasReservas() {
                       styles.googleSmallButton,
                       pressed && styles.googleSmallButtonPressed,
                     ]}
-                    onPress={capturarLocalizacaoDevolucao}
+                    onPress={() => capturarLocalizacaoDevolucao(true)}
                     disabled={isGettingReturnLocation}
                   >
                     <Text style={styles.googleSmallButtonText}>🔄 Detectar Local</Text>

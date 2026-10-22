@@ -52,7 +52,7 @@ export function Home({ navigation }: HomeProps) {
         showsVerticalScrollIndicator={false}
       >
         {/* Cabeçalho Curvo Roxo */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: Math.max(insets.top + 12, 20) }]}>
           <View style={styles.headerTop}>
             <View style={styles.greetingContainer}>
               <Text style={styles.greetingTitle}>Olá,</Text>
